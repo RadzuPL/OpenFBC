@@ -5,6 +5,7 @@
 // =============================================================================
 #include <Arduino.h>
 #include "config.h"
+#include "params.h"
 #include "ble_server.h"
 
 void setup() {
@@ -30,9 +31,9 @@ void loop() {
   if (millis() - lastPrint >= 5000) {
     lastPrint = millis();
     Serial.printf("[MAIN] spinUpTime=%u ms | targetSpeed=%u%% | minVoltage=%.2fV | BLE=%s\n",
-                  (uint16_t)spinUpTime,
-                  (uint8_t)targetSpeed,
-                  (float)minVoltage,
+                  spinUpTime,
+                  targetSpeed,
+                  minVoltage,
                   isBleConnected() ? "connected" : "advertising"
     );
   }
