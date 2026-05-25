@@ -17,7 +17,7 @@ volatile float    minVoltage  = DEFAULT_MIN_VOLTAGE;
 // --- Connection state ---
 static bool bleConnected = false;
 
-// --- BLE server callbacks (connection / disconnection) ---
+// --- BLE server callbacks ---
 class ServerCallbacks : public NimBLEServerCallbacks {
   void onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo) override {
     bleConnected = true;
@@ -34,8 +34,6 @@ class ServerCallbacks : public NimBLEServerCallbacks {
   }
 };
 
-// --- Characteristic write callbacks ---
-
 class SpinUpTimeCallback : public NimBLECharacteristicCallbacks {
   void onWrite(NimBLECharacteristic* pChar, NimBLEConnInfo& connInfo) override {
     if (pChar->getLength() == sizeof(uint16_t)) {
@@ -45,10 +43,6 @@ class SpinUpTimeCallback : public NimBLECharacteristicCallbacks {
         spinUpTime = value;
 #if DEBUG_MODE
         Serial.printf("[BLE] spinUpTime updated: %u ms\n", spinUpTime);
-#endif
-      } else {
-#if DEBUG_MODE
-        Serial.printf("[BLE] spinUpTime rejected (out of range): %u\n", value);
 #endif
       }
     }
@@ -65,10 +59,6 @@ class TargetSpeedCallback : public NimBLECharacteristicCallbacks {
 #if DEBUG_MODE
         Serial.printf("[BLE] targetSpeed updated: %u %%\n", targetSpeed);
 #endif
-      } else {
-#if DEBUG_MODE
-        Serial.printf("[BLE] targetSpeed rejected (out of range): %u\n", value);
-#endif
       }
     }
   }
@@ -84,45 +74,46 @@ class MinVoltageCallback : public NimBLECharacteristicCallbacks {
 #if DEBUG_MODE
         Serial.printf("[BLE] minVoltage updated: %.2f V\n", minVoltage);
 #endif
-      } else {
-#if DEBUG_MODE
-        Serial.printf("[BLE] minVoltage rejected (out of range): %.2f\n", value);
-#endif
       }
     }
   }
 };
 
-// --- Initialization ---
 void initBleServer() {
   NimBLEDevice::init(BLE_DEVICE_NAME);
+
   NimBLEServer* pServer = NimBLEDevice::createServer();
   pServer->setCallbacks(new ServerCallbacks());
   NimBLEService* pService = pServer->createService(BLE_SERVICE_UUID);
 
   NimBLECharacteristic* pSpinUpTime = pService->createCharacteristic(
-    BLE_CHAR_SPIN_UP_TIME, NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::READ
-  );
+    BLE_CHAR_SPIN_UP_TIME, NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::READ);
   pSpinUpTime->setCallbacks(new SpinUpTimeCallback());
   uint16_t defaultSpin = DEFAULT_SPIN_UP_TIME;
   pSpinUpTime->setValue(defaultSpin);
 
   NimBLECharacteristic* pTargetSpeed = pService->createCharacteristic(
-    BLE_CHAR_TARGET_SPEED, NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::READ
-  );
+    BLE_CHAR_TARGET_SPEED, NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::READ);
   pTargetSpeed->setCallbacks(new TargetSpeedCallback());
   uint8_t defaultSpeed = DEFAULT_TARGET_SPEED;
   pTargetSpeed->setValue(defaultSpeed);
 
   NimBLECharacteristic* pMinVoltage = pService->createCharacteristic(
-    BLE_CHAR_MIN_VOLTAGE, NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::READ
-  );
+    BLE_CHAR_MIN_VOLTAGE, NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::READ);
   pMinVoltage->setCallbacks(new MinVoltageCallback());
   float defaultVoltage = DEFAULT_MIN_VOLTAGE;
   pMinVoltage->setValue(defaultVoltage);
 
   pServer->start();
-  NimBLEDevice::startAdvertising();
+
+  // Explicit advertising: name in adv data, 128-bit UUID in scan response.
+  // This is required for Android and Web Bluetooth to discover the device.
+  NimBLEAdvertising* pAdv = NimBLEDevice::getAdvertising();
+  pAdv->setName(BLE_DEVICE_NAME);
+  pAdv->addServiceUUID(BLE_SERVICE_UUID);
+  pAdv->enableScanResponse(true);
+  pAdv->start();
+
 #if DEBUG_MODE
   Serial.println("[BLE] Server initialised, advertising as: " BLE_DEVICE_NAME);
 #endif
