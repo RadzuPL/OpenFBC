@@ -53,11 +53,10 @@ services:
     restart: unless-stopped
     ports:
       - "8321:80"
-    
+```
 
 ## 5. Znane problemy
 - iOS/Safari nie wspiera natywnie Web Bluetooth. Użytkownicy Apple powinni używać aplikacji **Bluefy**.
-- Android + Chrome działa natywnie bez dodatkowych obejść.
 
 ## 6. TODO (z podziałem na obszary projektu)
 
