@@ -88,7 +88,7 @@ services:
 - [x] Obraz publiczny dostępny na GHCR: `ghcr.io/radzupl/opennerfesc-web-config:latest`.
 - [x] Strona placeholder działa i jest dostępna publicznie pod `one.radzu.net`.
 - [ ] Skonfigurować Watchtower do automatycznego odświeżania obrazu.
-- [ ] Dopiąć subdomenę do kontenera i potwierdzić dostępność po HTTPS (SSL przez Cloudflare).
+- [x] Dopiąć subdomenę do kontenera i potwierdzić dostępność po HTTPS (SSL przez Cloudflare).
 
 ### Organizacja projektu i dokumentacja
 - [ ] Uporządkować backlog i kolejność prac (MVP → kolejne iteracje).
