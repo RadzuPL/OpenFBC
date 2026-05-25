@@ -18,9 +18,10 @@ static const char* NVS_SPEED = "speed";
 static const char* NVS_VOLT  = "volt";
 
 // --- Parameter storage (definitions for extern declarations in ble_server.h) ---
-volatile uint16_t spinUpTime  = DEFAULT_SPIN_UP_TIME;
-volatile uint8_t  targetSpeed = DEFAULT_TARGET_SPEED;
-volatile float    minVoltage  = DEFAULT_MIN_VOLTAGE;
+// Note: not volatile - BLE callbacks on ESP32 run in FreeRTOS tasks, not ISR.
+uint16_t spinUpTime  = DEFAULT_SPIN_UP_TIME;
+uint8_t  targetSpeed = DEFAULT_TARGET_SPEED;
+float    minVoltage  = DEFAULT_MIN_VOLTAGE;
 
 // --- Connection state ---
 static bool bleConnected = false;
@@ -29,13 +30,13 @@ static bool bleConnected = false;
 static void nvsSave() {
   Preferences prefs;
   prefs.begin(NVS_NS, false);
-  prefs.putUShort(NVS_SPIN,  (uint16_t)spinUpTime);
-  prefs.putUChar (NVS_SPEED, (uint8_t)targetSpeed);
-  prefs.putFloat (NVS_VOLT,  (float)minVoltage);
+  prefs.putUShort(NVS_SPIN,  spinUpTime);
+  prefs.putUChar (NVS_SPEED, targetSpeed);
+  prefs.putFloat (NVS_VOLT,  minVoltage);
   prefs.end();
 #if DEBUG_MODE
   Serial.printf("[NVS] Saved: spinUp=%u ms  speed=%u%%  volt=%.2f V\n",
-                (uint16_t)spinUpTime, (uint8_t)targetSpeed, (float)minVoltage);
+                spinUpTime, targetSpeed, minVoltage);
 #endif
 }
 
@@ -48,7 +49,7 @@ static void nvsLoad() {
   prefs.end();
 #if DEBUG_MODE
   Serial.printf("[NVS] Loaded: spinUp=%u ms  speed=%u%%  volt=%.2f V\n",
-                (uint16_t)spinUpTime, (uint8_t)targetSpeed, (float)minVoltage);
+                spinUpTime, targetSpeed, minVoltage);
 #endif
 }
 
@@ -78,7 +79,7 @@ class SpinUpTimeCallback : public NimBLECharacteristicCallbacks {
         spinUpTime = value;
         nvsSave();
 #if DEBUG_MODE
-        Serial.printf("[BLE] spinUpTime updated: %u ms\n", (uint16_t)spinUpTime);
+        Serial.printf("[BLE] spinUpTime updated: %u ms\n", spinUpTime);
 #endif
       }
     }
@@ -94,7 +95,7 @@ class TargetSpeedCallback : public NimBLECharacteristicCallbacks {
         targetSpeed = value;
         nvsSave();
 #if DEBUG_MODE
-        Serial.printf("[BLE] targetSpeed updated: %u %%\n", (uint8_t)targetSpeed);
+        Serial.printf("[BLE] targetSpeed updated: %u %%\n", targetSpeed);
 #endif
       }
     }
@@ -110,7 +111,7 @@ class MinVoltageCallback : public NimBLECharacteristicCallbacks {
         minVoltage = value;
         nvsSave();
 #if DEBUG_MODE
-        Serial.printf("[BLE] minVoltage updated: %.2f V\n", (float)minVoltage);
+        Serial.printf("[BLE] minVoltage updated: %.2f V\n", minVoltage);
 #endif
       }
     }
@@ -131,19 +132,19 @@ void initBleServer() {
     BLE_CHAR_SPIN_UP_TIME,
     NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::READ);
   pSpinUpTime->setCallbacks(new SpinUpTimeCallback());
-  { uint16_t v = (uint16_t)spinUpTime; pSpinUpTime->setValue(v); }
+  pSpinUpTime->setValue(spinUpTime);
 
   NimBLECharacteristic* pTargetSpeed = pService->createCharacteristic(
     BLE_CHAR_TARGET_SPEED,
     NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::READ);
   pTargetSpeed->setCallbacks(new TargetSpeedCallback());
-  { uint8_t v = (uint8_t)targetSpeed; pTargetSpeed->setValue(v); }
+  pTargetSpeed->setValue(targetSpeed);
 
   NimBLECharacteristic* pMinVoltage = pService->createCharacteristic(
     BLE_CHAR_MIN_VOLTAGE,
     NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::READ);
   pMinVoltage->setCallbacks(new MinVoltageCallback());
-  { float v = (float)minVoltage; pMinVoltage->setValue(v); }
+  pMinVoltage->setValue(minVoltage);
 
   pServer->start();
 
