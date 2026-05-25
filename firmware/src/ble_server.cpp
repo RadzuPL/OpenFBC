@@ -60,13 +60,11 @@ class ServerCallbacks : public NimBLEServerCallbacks {
 #if DEBUG_MODE
     Serial.printf("[BLE] Client connected, handle=%d\n", connInfo.getConnHandle());
 #endif
-    // Stop advertising while connected (optional, saves power)
-    NimBLEDevice::stopAdvertising();
   }
   void onDisconnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo, int reason) override {
     bleConnected = false;
 #if DEBUG_MODE
-    Serial.printf("[BLE] Client disconnected, reason=%d - restarting advertising\n", reason);
+    Serial.printf("[BLE] Client disconnected, reason=0x%02X - restarting advertising\n", reason);
 #endif
     NimBLEDevice::startAdvertising();
   }
@@ -124,10 +122,12 @@ void initBleServer() {
   // Restore last saved parameters from NVS
   nvsLoad();
 
-  // Disable security / bonding - required for Web Bluetooth compatibility
+  // Init BLE stack first
+  NimBLEDevice::init(BLE_DEVICE_NAME);
+
+  // Disable security/bonding AFTER init - must be called after NimBLEDevice::init()
   NimBLEDevice::setSecurityAuth(false, false, false);
 
-  NimBLEDevice::init(BLE_DEVICE_NAME);
   NimBLEServer* pServer = NimBLEDevice::createServer();
   pServer->setCallbacks(new ServerCallbacks());
 
@@ -151,6 +151,7 @@ void initBleServer() {
   pMinVoltage->setCallbacks(new MinVoltageCallback());
   pMinVoltage->setValue(minVoltage);
 
+  // Service MUST be started before pServer->start() in NimBLE 2.x
   pService->start();
   pServer->start();
 
