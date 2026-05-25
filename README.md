@@ -1,13 +1,18 @@
 # OpenNerfESC
 
+## ⚠️ UWAGA
+**TO DOPIERO SAM POCZĄTEK PROJEKTU — WIĘKSZOŚĆ TEGO, CO JEST TUTAJ AKTUALNIE STWORZONE, PRZYGOTOWAŁ COPILOT.**
+
 ## 1. Wstęp i założenia projektu
 OpenNerfESC to otwartoźródłowy, miniaturowy i bezdźwiękowy (20kHz+) sterownik PWM do silników szczotkowych Flywheel w wyrzutniach strzałkowych. Sterowanie odbywa się z poziomu przeglądarki przez Web Bluetooth API, więc nie trzeba rozkręcać wyrzutni i kręcić potencjometrem.
 
 ## 2. Hardware (Elektronika i „Kanapka”)
-- **Mózg:** ESP32-C3 Super Mini (mały, tani, z BLE).
-- **Zasilanie logiki:** przetwornica step-down (np. Mini-360) z 2S/3S LiPo do stabilnych 5V dla MCU.
-- **Element wykonawczy:** N-MOSFET IRLR7843 (TO-252) sterowany przez gate driver TC4420, żeby uzyskać szybkie i pełne otwarcie bramki przy logice 3.3V.
-- **Zabezpieczenia:** dioda Schottky'ego SS54/SS56 na terminalach silników do tłumienia przepięć indukcyjnych.
+- **Mózg:** TENSTAR ESP32-C3 SupmerMini – https://pl.aliexpress.com/item/1005009890133886.html
+- **Driver bramki MOSFET:** TC4420 – https://pl.aliexpress.com/item/1005011629643514.html
+- **Element wykonawczy:** N-MOSFET IRLR7843 (TO-252) – https://pl.aliexpress.com/item/1005006127790007.html
+- **Zabezpieczenia:** dioda Schottky'ego SB540 5A40V – https://pl.aliexpress.com/item/1005007048222899.html
+- **Zasilanie logiki:** Mini DC-DC 12-24V do 5V 3A – https://pl.aliexpress.com/item/1005006245122273.html  
+  (na płytce prawdopodobnie MP2315 z elementami dodatkowymi; moduł będzie wylutowany i potrzebne elementy trafią na docelową płytkę)
 - **Połączenia:** XT30 i solidne ścieżki z odniesieniem do `/hardware/wiring_diagram.png` (wpięcie oryginalnego Rev Triggera jako wejście logiczne ESP32).
 
 Struktura folderu sprzętowego:
@@ -38,6 +43,37 @@ Przykładowy flow wdrożenia:
 3. Watchtower (lub inny agent) na serwerze odświeża kontener.
 4. Nowa wersja jest dostępna np. pod `nerf.radzu.net`.
 
-## 5. Znane problemy / To-Do
+## 5. Znane problemy
 - iOS/Safari nie wspiera natywnie Web Bluetooth. Użytkownicy Apple powinni używać aplikacji **Bluefy**.
 - Android + Chrome działa natywnie bez dodatkowych obejść.
+
+## 6. TODO (z podziałem na obszary projektu)
+
+### Hardware / elektronika
+- [ ] Dokończyć i zweryfikować pełny schemat elektryczny.
+- [ ] Narysować finalne PCB pod docelowe elementy (w tym elementy z modułu MP2315).
+- [ ] Wykonać ERC/DRC i przegląd obciążalności ścieżek mocy.
+- [ ] Zamówić prototypowe płytki PCB.
+- [ ] Zlutować i uruchomić pierwsze prototypy.
+- [ ] Zweryfikować termikę i stabilność sekcji mocy pod obciążeniem.
+
+### Firmware (ESP32-C3)
+- [ ] Dokończyć implementację i konfigurację wszystkich trybów sterowania PWM.
+- [ ] Sprawdzić i dostroić parametry bezpieczeństwa (limity, stany awaryjne).
+- [ ] Przetestować komunikację BLE i kompatybilność z różnymi telefonami.
+- [ ] Uzupełnić proces flashowania i aktualizacji firmware.
+
+### Web Config / aplikacja webowa
+- [ ] Dopracować UI i walidację parametrów.
+- [ ] Sprawdzić stabilność połączenia Web Bluetooth i obsługę błędów.
+- [ ] Uzupełnić dokumentację użytkownika dla konfiguratora.
+
+### Konteneryzacja i deployment
+- [ ] Dokończyć konfigurację kontenera Docker dla web-config.
+- [ ] Zweryfikować automatyczny build/publish obrazu w GitHub Actions.
+- [ ] Skonfigurować serwer do automatycznego odświeżania obrazu (np. Watchtower).
+- [ ] Dopiąć subdomenę do kontenera i potwierdzić dostępność usługi po HTTPS.
+
+### Organizacja projektu i dokumentacja
+- [ ] Uporządkować backlog i kolejność prac (MVP → kolejne iteracje).
+- [ ] Uzupełnić README o status postępu po każdym większym etapie.
