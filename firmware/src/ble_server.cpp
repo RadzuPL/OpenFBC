@@ -29,13 +29,13 @@ static bool bleConnected = false;
 static void nvsSave() {
   Preferences prefs;
   prefs.begin(NVS_NS, false);
-  prefs.putUShort(NVS_SPIN,  spinUpTime);
-  prefs.putUChar (NVS_SPEED, targetSpeed);
-  prefs.putFloat (NVS_VOLT,  minVoltage);
+  prefs.putUShort(NVS_SPIN,  (uint16_t)spinUpTime);
+  prefs.putUChar (NVS_SPEED, (uint8_t)targetSpeed);
+  prefs.putFloat (NVS_VOLT,  (float)minVoltage);
   prefs.end();
 #if DEBUG_MODE
   Serial.printf("[NVS] Saved: spinUp=%u ms  speed=%u%%  volt=%.2f V\n",
-                spinUpTime, targetSpeed, minVoltage);
+                (uint16_t)spinUpTime, (uint8_t)targetSpeed, (float)minVoltage);
 #endif
 }
 
@@ -48,7 +48,7 @@ static void nvsLoad() {
   prefs.end();
 #if DEBUG_MODE
   Serial.printf("[NVS] Loaded: spinUp=%u ms  speed=%u%%  volt=%.2f V\n",
-                spinUpTime, targetSpeed, minVoltage);
+                (uint16_t)spinUpTime, (uint8_t)targetSpeed, (float)minVoltage);
 #endif
 }
 
@@ -78,7 +78,7 @@ class SpinUpTimeCallback : public NimBLECharacteristicCallbacks {
         spinUpTime = value;
         nvsSave();
 #if DEBUG_MODE
-        Serial.printf("[BLE] spinUpTime updated: %u ms\n", spinUpTime);
+        Serial.printf("[BLE] spinUpTime updated: %u ms\n", (uint16_t)spinUpTime);
 #endif
       }
     }
@@ -94,7 +94,7 @@ class TargetSpeedCallback : public NimBLECharacteristicCallbacks {
         targetSpeed = value;
         nvsSave();
 #if DEBUG_MODE
-        Serial.printf("[BLE] targetSpeed updated: %u %%\n", targetSpeed);
+        Serial.printf("[BLE] targetSpeed updated: %u %%\n", (uint8_t)targetSpeed);
 #endif
       }
     }
@@ -110,7 +110,7 @@ class MinVoltageCallback : public NimBLECharacteristicCallbacks {
         minVoltage = value;
         nvsSave();
 #if DEBUG_MODE
-        Serial.printf("[BLE] minVoltage updated: %.2f V\n", minVoltage);
+        Serial.printf("[BLE] minVoltage updated: %.2f V\n", (float)minVoltage);
 #endif
       }
     }
@@ -131,19 +131,19 @@ void initBleServer() {
     BLE_CHAR_SPIN_UP_TIME,
     NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::READ);
   pSpinUpTime->setCallbacks(new SpinUpTimeCallback());
-  pSpinUpTime->setValue((uint16_t)spinUpTime);
+  { uint16_t v = (uint16_t)spinUpTime; pSpinUpTime->setValue(v); }
 
   NimBLECharacteristic* pTargetSpeed = pService->createCharacteristic(
     BLE_CHAR_TARGET_SPEED,
     NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::READ);
   pTargetSpeed->setCallbacks(new TargetSpeedCallback());
-  pTargetSpeed->setValue((uint8_t)targetSpeed);
+  { uint8_t v = (uint8_t)targetSpeed; pTargetSpeed->setValue(v); }
 
   NimBLECharacteristic* pMinVoltage = pService->createCharacteristic(
     BLE_CHAR_MIN_VOLTAGE,
     NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::READ);
   pMinVoltage->setCallbacks(new MinVoltageCallback());
-  pMinVoltage->setValue(minVoltage);
+  { float v = (float)minVoltage; pMinVoltage->setValue(v); }
 
   pServer->start();
 
