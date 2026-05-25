@@ -36,228 +36,90 @@
     .param label {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 0.4rem;
       font-size: 0.9rem;
+      margin-bottom: 0.4rem;
       color: #d1d5db;
     }
-    .param label span { color: #60a5fa; font-weight: 600; }
+    .param label span {
+      font-weight: 700;
+      color: #60a5fa;
+      min-width: 6ch;
+      text-align: right;
+    }
     input[type=range] {
-      width: 100%; accent-color: #3b82f6;
+      width: 100%;
+      accent-color: #3b82f6;
     }
-    .param-row {
-      display: flex; gap: 0.6rem; align-items: center;
-    }
-    .param-row input[type=number] {
-      width: 90px;
-      padding: 0.35rem 0.5rem;
-      border-radius: 6px;
-      border: 1px solid #374151;
-      background: #111827; color: #f9fafb;
-      font-size: 0.95rem;
+    .btn-row {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.8rem;
     }
     button {
-      padding: 0.6rem 1.4rem;
-      border-radius: 8px;
+      flex: 1;
+      padding: 0.65rem 1rem;
       border: none;
-      font-size: 0.95rem;
+      border-radius: 8px;
+      font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
+      transition: opacity 0.15s;
     }
-    #btn-connect { background: #3b82f6; color: #fff; }
-    #btn-connect:hover { background: #2563eb; }
-    #btn-connect:disabled { background: #374151; color: #6b7280; cursor: default; }
-    .apply-btn { background: #065f46; color: #6ee7b7; }
-    .apply-btn:hover { background: #047857; }
-    .apply-btn:disabled { background: #374151; color: #6b7280; cursor: default; }
-    .ios-note {
-      margin-top: 1.5rem;
-      padding: 0.7rem 1rem;
-      border-radius: 8px;
-      background: #292524;
-      font-size: 0.8rem;
-      color: #a8a29e;
+    button:disabled { opacity: 0.35; cursor: default; }
+    #btn-connect { background: #2563eb; color: #fff; }
+    #btn-connect:hover:not(:disabled) { background: #1d4ed8; }
+    #btn-send    { background: #059669; color: #fff; }
+    #btn-send:hover:not(:disabled)    { background: #047857; }
+    #log {
+      margin-top: 1.4rem;
+      max-height: 140px;
+      overflow-y: auto;
+      font-size: 0.78rem;
+      color: #6b7280;
+      font-family: monospace;
+      line-height: 1.6;
     }
   </style>
 </head>
 <body>
 <main>
-  <h1>&#x1F3AF; OpenNerfESC</h1>
-  <div id="status" class="status">Rozłączony</div>
-  <br>
-  <button id="btn-connect">Połącz przez Bluetooth</button>
+  <h1>OpenNerfESC Konfigurator</h1>
+  <span id="status" class="status">Rozłączono</span>
 
-  <hr style="border-color:#374151; margin: 1.5rem 0;">
-
-  <!-- spinUpTime -->
   <div class="param">
     <label>
-      Czas rozpędzania
-      <span><span id="val-spinUpTime">500</span> ms</span>
+      Czas rozbiegu (spinUpTime)
+      <span id="spin-value">500 ms</span>
     </label>
-    <div class="param-row">
-      <input type="range" id="range-spinUpTime" min="0" max="5000" step="50" value="500" />
-      <input type="number" id="num-spinUpTime" min="0" max="5000" step="50" value="500" />
-      <button class="apply-btn" id="send-spinUpTime" disabled>Wyślij</button>
-    </div>
+    <input id="input-spin-up-time" type="range"
+           min="0" max="5000" step="50" value="500" />
   </div>
 
-  <!-- targetSpeed -->
   <div class="param">
     <label>
-      Prędkość zadana
-      <span><span id="val-targetSpeed">75</span> %</span>
+      Prędkość docelowa (targetSpeed)
+      <span id="speed-value">75%</span>
     </label>
-    <div class="param-row">
-      <input type="range" id="range-targetSpeed" min="0" max="100" step="1" value="75" />
-      <input type="number" id="num-targetSpeed" min="0" max="100" step="1" value="75" />
-      <button class="apply-btn" id="send-targetSpeed" disabled>Wyślij</button>
-    </div>
+    <input id="input-target-speed" type="range"
+           min="0" max="100" step="1" value="75" />
   </div>
 
-  <!-- minVoltage -->
   <div class="param">
     <label>
-      Napięcie minimalne
-      <span><span id="val-minVoltage">6.0</span> V</span>
+      Min. napięcie (minVoltage)
+      <span id="voltage-value">6.0 V</span>
     </label>
-    <div class="param-row">
-      <input type="range" id="range-minVoltage" min="3.0" max="25.0" step="0.1" value="6.0" />
-      <input type="number" id="num-minVoltage" min="3.0" max="25.0" step="0.1" value="6.0" />
-      <button class="apply-btn" id="send-minVoltage" disabled>Wyślij</button>
-    </div>
+    <input id="input-min-voltage" type="range"
+           min="3.0" max="25.0" step="0.1" value="6.0" />
   </div>
 
-  <div class="ios-note">
-    &#x26A0;&#xFE0F; iOS / Safari: Web Bluetooth nie jest obsługiwany natywnie.
-    Użyj aplikacji <strong>Bluefy</strong> lub <strong>WebBLE</strong>.
+  <div class="btn-row">
+    <button id="btn-connect">Połącz z ESC</button>
+    <button id="btn-send" disabled>Wyślij parametry</button>
   </div>
+
+  <div id="log"></div>
 </main>
-
-<script>
-  // =======================================================================
-  // OpenNerfESC - web-config/src/index.html
-  // Web Bluetooth configuration interface.
-  // Variable names match firmware exactly (see /docs/CODING_GUIDELINES.md).
-  // =======================================================================
-
-  // --- BLE UUIDs (must match config.h in firmware) ---
-  const BLE_SERVICE_UUID       = '12345678-1234-1234-1234-123456789abc';
-  const BLE_CHAR_SPIN_UP_TIME  = '12345678-1234-1234-1234-123456789001';
-  const BLE_CHAR_TARGET_SPEED  = '12345678-1234-1234-1234-123456789002';
-  const BLE_CHAR_MIN_VOLTAGE   = '12345678-1234-1234-1234-123456789003';
-
-  // --- Validation ranges (must match config.h) ---
-  const RANGES = {
-    spinUpTime:  { min: 0,   max: 5000, step: 50  },
-    targetSpeed: { min: 0,   max: 100,  step: 1   },
-    minVoltage:  { min: 3.0, max: 25.0, step: 0.1 },
-  };
-
-  let chars = {};
-
-  // --- UI helpers ---
-  const statusEl   = document.getElementById('status');
-  const btnConnect = document.getElementById('btn-connect');
-
-  function setStatus(text, cls) {
-    statusEl.textContent = text;
-    statusEl.className = 'status ' + (cls || '');
-  }
-
-  function setSendButtons(enabled) {
-    ['spinUpTime', 'targetSpeed', 'minVoltage'].forEach(k => {
-      document.getElementById('send-' + k).disabled = !enabled;
-    });
-  }
-
-  // --- Sync range <-> number inputs ---
-  ['spinUpTime', 'targetSpeed', 'minVoltage'].forEach(key => {
-    const range = document.getElementById('range-' + key);
-    const num   = document.getElementById('num-' + key);
-    const val   = document.getElementById('val-' + key);
-
-    range.addEventListener('input', () => {
-      num.value = range.value;
-      val.textContent = range.value;
-    });
-    num.addEventListener('input', () => {
-      const r = RANGES[key];
-      let v = parseFloat(num.value);
-      if (isNaN(v)) return;
-      v = Math.min(r.max, Math.max(r.min, v));
-      range.value = v;
-      val.textContent = v;
-    });
-  });
-
-  // --- BLE connect ---
-  btnConnect.addEventListener('click', async () => {
-    if (!navigator.bluetooth) {
-      setStatus('Web Bluetooth niedostępny', 'error');
-      return;
-    }
-    try {
-      setStatus('Wyszukiwanie...', '');
-      btnConnect.disabled = true;
-
-      const device = await navigator.bluetooth.requestDevice({
-        filters: [{ services: [BLE_SERVICE_UUID] }]
-      });
-
-      device.addEventListener('gattserverdisconnected', () => {
-        setStatus('Rozłączony', '');
-        setSendButtons(false);
-        btnConnect.disabled = false;
-        chars = {};
-      });
-
-      const server  = await device.gatt.connect();
-      const service = await server.getPrimaryService(BLE_SERVICE_UUID);
-
-      chars.spinUpTime  = await service.getCharacteristic(BLE_CHAR_SPIN_UP_TIME);
-      chars.targetSpeed = await service.getCharacteristic(BLE_CHAR_TARGET_SPEED);
-      chars.minVoltage  = await service.getCharacteristic(BLE_CHAR_MIN_VOLTAGE);
-
-      setStatus('Połączony — ' + device.name, 'connected');
-      setSendButtons(true);
-      btnConnect.disabled = false;
-
-    } catch (err) {
-      setStatus('Błąd: ' + err.message, 'error');
-      btnConnect.disabled = false;
-    }
-  });
-
-  // --- Send helpers ---
-  async function sendUint16(char, value) {
-    const buf = new ArrayBuffer(2);
-    new DataView(buf).setUint16(0, value, true); // little-endian
-    await char.writeValueWithResponse(buf);
-  }
-  async function sendUint8(char, value) {
-    const buf = new ArrayBuffer(1);
-    new DataView(buf).setUint8(0, value);
-    await char.writeValueWithResponse(buf);
-  }
-  async function sendFloat(char, value) {
-    const buf = new ArrayBuffer(4);
-    new DataView(buf).setFloat32(0, value, true); // little-endian
-    await char.writeValueWithResponse(buf);
-  }
-
-  // --- Send buttons ---
-  document.getElementById('send-spinUpTime').addEventListener('click', async () => {
-    const v = parseInt(document.getElementById('num-spinUpTime').value);
-    if (chars.spinUpTime) await sendUint16(chars.spinUpTime, v);
-  });
-  document.getElementById('send-targetSpeed').addEventListener('click', async () => {
-    const v = parseInt(document.getElementById('num-targetSpeed').value);
-    if (chars.targetSpeed) await sendUint8(chars.targetSpeed, v);
-  });
-  document.getElementById('send-minVoltage').addEventListener('click', async () => {
-    const v = parseFloat(document.getElementById('num-minVoltage').value);
-    if (chars.minVoltage) await sendFloat(chars.minVoltage, v);
-  });
-</script>
+<script src="app.js"></script>
 </body>
 </html>
