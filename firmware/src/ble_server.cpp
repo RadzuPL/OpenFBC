@@ -1,6 +1,6 @@
 // =============================================================================
 // OpenNerfESC - ble_server.cpp
-// BLE GATT server implementation using NimBLE-Arduino library.
+// BLE GATT server implementation using NimBLE-Arduino 2.x library.
 // Exposes three writable characteristics: spinUpTime, targetSpeed, minVoltage.
 // All incoming values are validated before being applied.
 // =============================================================================
@@ -19,14 +19,14 @@ static bool bleConnected = false;
 
 // --- BLE server callbacks (connection / disconnection) ---
 class ServerCallbacks : public NimBLEServerCallbacks {
-  void onConnect(NimBLEServer* pServer) override {
+  void onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo) override {
     bleConnected = true;
 #if DEBUG_MODE
     Serial.println("[BLE] Client connected");
 #endif
   }
 
-  void onDisconnect(NimBLEServer* pServer) override {
+  void onDisconnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo, int reason) override {
     bleConnected = false;
 #if DEBUG_MODE
     Serial.println("[BLE] Client disconnected - restarting advertising");
@@ -38,9 +38,9 @@ class ServerCallbacks : public NimBLEServerCallbacks {
 // --- Characteristic write callbacks ---
 
 class SpinUpTimeCallback : public NimBLECharacteristicCallbacks {
-  void onWrite(NimBLECharacteristic* pChar) override {
-    uint16_t value = 0;
+  void onWrite(NimBLECharacteristic* pChar, NimBLEConnInfo& connInfo) override {
     if (pChar->getDataLength() == sizeof(uint16_t)) {
+      uint16_t value = 0;
       memcpy(&value, pChar->getValue().data(), sizeof(uint16_t));
       if (value >= SPIN_UP_TIME_MIN && value <= SPIN_UP_TIME_MAX) {
         spinUpTime = value;
@@ -57,9 +57,9 @@ class SpinUpTimeCallback : public NimBLECharacteristicCallbacks {
 };
 
 class TargetSpeedCallback : public NimBLECharacteristicCallbacks {
-  void onWrite(NimBLECharacteristic* pChar) override {
-    uint8_t value = 0;
+  void onWrite(NimBLECharacteristic* pChar, NimBLEConnInfo& connInfo) override {
     if (pChar->getDataLength() == sizeof(uint8_t)) {
+      uint8_t value = 0;
       memcpy(&value, pChar->getValue().data(), sizeof(uint8_t));
       if (value >= TARGET_SPEED_MIN && value <= TARGET_SPEED_MAX) {
         targetSpeed = value;
@@ -76,9 +76,9 @@ class TargetSpeedCallback : public NimBLECharacteristicCallbacks {
 };
 
 class MinVoltageCallback : public NimBLECharacteristicCallbacks {
-  void onWrite(NimBLECharacteristic* pChar) override {
-    float value = 0.0f;
+  void onWrite(NimBLECharacteristic* pChar, NimBLEConnInfo& connInfo) override {
     if (pChar->getDataLength() == sizeof(float)) {
+      float value = 0.0f;
       memcpy(&value, pChar->getValue().data(), sizeof(float));
       if (value >= MIN_VOLTAGE_MIN && value <= MIN_VOLTAGE_MAX) {
         minVoltage = value;
@@ -111,7 +111,7 @@ void initBleServer() {
   );
   pSpinUpTime->setCallbacks(new SpinUpTimeCallback());
   uint16_t defaultSpin = DEFAULT_SPIN_UP_TIME;
-  pSpinUpTime->setValue((uint8_t*)&defaultSpin, sizeof(defaultSpin));
+  pSpinUpTime->setValue(defaultSpin);
 
   // targetSpeed characteristic - writable, uint8_t (1 byte)
   NimBLECharacteristic* pTargetSpeed = pService->createCharacteristic(
@@ -120,7 +120,7 @@ void initBleServer() {
   );
   pTargetSpeed->setCallbacks(new TargetSpeedCallback());
   uint8_t defaultSpeed = DEFAULT_TARGET_SPEED;
-  pTargetSpeed->setValue(&defaultSpeed, sizeof(defaultSpeed));
+  pTargetSpeed->setValue(defaultSpeed);
 
   // minVoltage characteristic - writable, float (4 bytes, little-endian)
   NimBLECharacteristic* pMinVoltage = pService->createCharacteristic(
@@ -129,7 +129,7 @@ void initBleServer() {
   );
   pMinVoltage->setCallbacks(new MinVoltageCallback());
   float defaultVoltage = DEFAULT_MIN_VOLTAGE;
-  pMinVoltage->setValue((uint8_t*)&defaultVoltage, sizeof(defaultVoltage));
+  pMinVoltage->setValue(defaultVoltage);
 
   pService->start();
   NimBLEDevice::startAdvertising();
