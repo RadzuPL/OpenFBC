@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OpenNerfESC Web Config</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main>
+      <h1>OpenNerfESC</h1>
+      <p>Konfigurator PWM przez Web Bluetooth API.</p>
+      <button id="connect">Połącz przez Bluetooth</button>
+      <label for="duty">Moc silników (PWM)</label>
+      <input id="duty" type="range" min="0" max="255" value="0" />
+      <output id="duty-value">0</output>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>
