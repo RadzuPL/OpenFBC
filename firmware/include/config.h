@@ -20,7 +20,7 @@
 #define BLE_CHAR_TARGET_SPEED   "12345678-1234-1234-1234-123456789002"
 #define BLE_CHAR_MIN_VOLTAGE    "12345678-1234-1234-1234-123456789003"
 
-// --- Pin Definitions (ESP32-S3 Super Mini) ---
+// --- Pin Definitions (ESP32-C6 Super Mini) ---
 // Note: update for ESP32-C3 in production build
 #define PIN_PWM_OUTPUT          2
 #define PIN_TRIGGER_INPUT       4
