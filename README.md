@@ -7,7 +7,7 @@
 OpenNerfESC to otwartoźródłowy, miniaturowy i bezdźwiękowy (20kHz+) sterownik PWM do silników szczotkowych Flywheel w wyrzutniach strzałkowych. Sterowanie odbywa się z poziomu przeglądarki przez Web Bluetooth API, więc nie trzeba rozkręcać wyrzutni i kręcić potencjometrem.
 
 ## 2. Hardware (Elektronika i „Kanapka”)
-- **Mózg:** TENSTAR ESP32-C3 SupmerMini – https://pl.aliexpress.com/item/1005009890133886.html
+- **Mózg:** TENSTAR ESP32-C3 Super Mini – https://pl.aliexpress.com/item/1005009890133886.html
 - **Driver bramki MOSFET:** TC4420 – https://pl.aliexpress.com/item/1005011629643514.html
 - **Element wykonawczy:** N-MOSFET IRLR7843 (TO-252) – https://pl.aliexpress.com/item/1005006127790007.html
 - **Zabezpieczenia:** dioda Schottky'ego SB540 5A40V – https://pl.aliexpress.com/item/1005007048222899.html
