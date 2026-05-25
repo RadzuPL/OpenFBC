@@ -58,13 +58,15 @@ class ServerCallbacks : public NimBLEServerCallbacks {
   void onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo) override {
     bleConnected = true;
 #if DEBUG_MODE
-    Serial.println("[BLE] Client connected");
+    Serial.printf("[BLE] Client connected, handle=%d\n", connInfo.getConnHandle());
 #endif
+    // Stop advertising while connected (optional, saves power)
+    NimBLEDevice::stopAdvertising();
   }
   void onDisconnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo, int reason) override {
     bleConnected = false;
 #if DEBUG_MODE
-    Serial.println("[BLE] Client disconnected - restarting advertising");
+    Serial.printf("[BLE] Client disconnected, reason=%d - restarting advertising\n", reason);
 #endif
     NimBLEDevice::startAdvertising();
   }
@@ -122,6 +124,9 @@ void initBleServer() {
   // Restore last saved parameters from NVS
   nvsLoad();
 
+  // Disable security / bonding - required for Web Bluetooth compatibility
+  NimBLEDevice::setSecurityAuth(false, false, false);
+
   NimBLEDevice::init(BLE_DEVICE_NAME);
   NimBLEServer* pServer = NimBLEDevice::createServer();
   pServer->setCallbacks(new ServerCallbacks());
@@ -146,10 +151,10 @@ void initBleServer() {
   pMinVoltage->setCallbacks(new MinVoltageCallback());
   pMinVoltage->setValue(minVoltage);
 
+  pService->start();
   pServer->start();
 
-  // Explicit advertising: name in adv data, 128-bit UUID in scan response.
-  // This is required for Android and Web Bluetooth to discover the device.
+  // Advertising: device name + service UUID in scan response for Web BT / Android
   NimBLEAdvertising* pAdv = NimBLEDevice::getAdvertising();
   pAdv->setName(BLE_DEVICE_NAME);
   pAdv->addServiceUUID(BLE_SERVICE_UUID);
