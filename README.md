@@ -6,7 +6,7 @@
 ## 1. Wstęp i założenia projektu
 OpenNerfESC to otwartoźródłowy, miniaturowy i bezdźwiękowy (20kHz+) sterownik PWM do silników szczotkowych Flywheel w wyrzutniach strzałkowych. Sterowanie odbywa się z poziomu przeglądarki przez Web Bluetooth API, więc nie trzeba rozkręcać wyrzutni i kręcić potencjometrem.
 
-## 2. Hardware (Elektronika i „Kanapka”)
+## 2. Hardware (Elektronika i „Kanapka")
 - **Mózg:** TENSTAR ESP32-C3 Super Mini – https://pl.aliexpress.com/item/1005009890133886.html
 - **Driver bramki MOSFET:** TC4420 – https://pl.aliexpress.com/item/1005011629643514.html
 - **Element wykonawczy:** N-MOSFET IRLR7843 (TO-252) – https://pl.aliexpress.com/item/1005006127790007.html
@@ -36,12 +36,26 @@ Interfejs to statyczna strona HTML/JS korzystająca z `navigator.bluetooth` — 
 - Kod strony: `web-config/src/index.html`, `web-config/src/style.css`, `web-config/src/app.js`.
 - Konteneryzacja: `web-config/Dockerfile` oparty o `nginx:alpine`.
 - Automatyzacja: `.github/workflows/docker-publish.yml` buduje i publikuje obraz na GHCR przy zmianach w `web-config/`.
+- Publiczny interfejs dostępny pod adresem: **https://one.radzu.net**
 
 Przykładowy flow wdrożenia:
 1. Push zmian webowych do repo.
-2. GitHub Actions buduje i publikuje nowy obraz.
-3. Watchtower (lub inny agent) na serwerze odświeża kontener.
-4. Nowa wersja jest dostępna np. pod `nerf.radzu.net`.
+2. GitHub Actions buduje i publikuje nowy obraz (tag `latest` + `main` + SHA commita).
+3. Watchtower (lub inny agent) na serwerze odświeża kontener automatycznie.
+4. Nowa wersja dostępna pod adresem `one.radzu.net`.
+
+Szybki start (Docker):
+```yaml
+services:
+  opennerfesc-web:
+    image: ghcr.io/radzupl/opennerfesc-web-config:latest
+    container_name: opennerfesc-web
+    restart: unless-stopped
+    ports:
+      - "8321:80"
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+```
 
 ## 5. Znane problemy
 - iOS/Safari nie wspiera natywnie Web Bluetooth. Użytkownicy Apple powinni używać aplikacji **Bluefy**.
@@ -69,10 +83,12 @@ Przykładowy flow wdrożenia:
 - [ ] Uzupełnić dokumentację użytkownika dla konfiguratora.
 
 ### Konteneryzacja i deployment
-- [ ] Dokończyć konfigurację kontenera Docker dla web-config.
-- [ ] Zweryfikować automatyczny build/publish obrazu w GitHub Actions.
-- [ ] Skonfigurować serwer do automatycznego odświeżania obrazu (np. Watchtower).
-- [ ] Dopiąć subdomenę do kontenera i potwierdzić dostępność usługi po HTTPS.
+- [x] Skonfigurować kontener Docker dla web-config (`nginx:alpine`).
+- [x] Zweryfikować automatyczny build/publish obrazu w GitHub Actions (tag `latest` na branchu `main`).
+- [x] Obraz publiczny dostępny na GHCR: `ghcr.io/radzupl/opennerfesc-web-config:latest`.
+- [x] Strona placeholder działa i jest dostępna publicznie pod `one.radzu.net`.
+- [ ] Skonfigurować Watchtower do automatycznego odświeżania obrazu.
+- [ ] Dopiąć subdomenę do kontenera i potwierdzić dostępność po HTTPS (SSL przez Cloudflare).
 
 ### Organizacja projektu i dokumentacja
 - [ ] Uporządkować backlog i kolejność prac (MVP → kolejne iteracje).
