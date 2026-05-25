@@ -113,7 +113,7 @@ void initBleServer() {
   pMinVoltage->setValue(minVoltage);
 
   // Service MUST be started before pServer->start() in NimBLE 2.x
-  pService->start();
+  
   pServer->start();
 
   // Advertising: name + service UUID in scan response (needed for Web BT / Android)
