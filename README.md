@@ -53,9 +53,7 @@ services:
     restart: unless-stopped
     ports:
       - "8321:80"
-    labels:
-      - com.centurylinklabs.watchtower.enable=true
-```
+    
 
 ## 5. Znane problemy
 - iOS/Safari nie wspiera natywnie Web Bluetooth. Użytkownicy Apple powinni używać aplikacji **Bluefy**.
@@ -87,7 +85,6 @@ services:
 - [x] Zweryfikować automatyczny build/publish obrazu w GitHub Actions (tag `latest` na branchu `main`).
 - [x] Obraz publiczny dostępny na GHCR: `ghcr.io/radzupl/opennerfesc-web-config:latest`.
 - [x] Strona placeholder działa i jest dostępna publicznie pod `one.radzu.net`.
-- [ ] Skonfigurować Watchtower do automatycznego odświeżania obrazu.
 - [x] Dopiąć subdomenę do kontenera i potwierdzić dostępność po HTTPS (SSL przez Cloudflare).
 
 ### Organizacja projektu i dokumentacja
