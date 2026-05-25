@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="pl">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>OpenNerfESC Konfigurator</title>
+  <title>OpenNerfESC Configurator</title>
   <style>
     :root { color-scheme: dark; }
     body {
@@ -12,44 +12,68 @@
       background: #111827; color: #f9fafb;
     }
     main {
-      width: min(520px, 94vw);
-      padding: 2rem;
+      width: min(540px, 96vw);
+      padding: 1.8rem 2rem 2rem;
       border-radius: 14px;
       background: #1f2937;
       border: 1px solid #374151;
     }
-    h1 { margin-top: 0; font-size: 1.4rem; }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.2rem;
+    }
+    h1 { margin: 0; font-size: 1.3rem; }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .lang-btn {
+      background: #374151;
+      border: none;
+      border-radius: 6px;
+      color: #9ca3af;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.25rem 0.55rem;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+    }
+    .lang-btn:hover { background: #4b5563; color: #f9fafb; }
+    .gh-link {
+      color: #60a5fa;
+      font-size: 0.78rem;
+      text-decoration: none;
+    }
+    .gh-link:hover { text-decoration: underline; }
     .status {
       display: inline-block;
-      margin-bottom: 1.5rem;
+      margin: 0.9rem 0 1.4rem;
       padding: 0.3rem 0.8rem;
       border-radius: 99px;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       font-weight: 600;
       background: #374151; color: #9ca3af;
     }
     .status.connected { background: #064e3b; color: #34d399; }
     .status.error     { background: #4c0519; color: #fb7185; }
-    .param {
-      margin-bottom: 1.4rem;
-    }
+    .param { margin-bottom: 1.3rem; }
     .param label {
       display: flex;
       justify-content: space-between;
-      font-size: 0.9rem;
-      margin-bottom: 0.4rem;
+      font-size: 0.88rem;
+      margin-bottom: 0.35rem;
       color: #d1d5db;
     }
     .param label span {
       font-weight: 700;
       color: #60a5fa;
-      min-width: 6ch;
+      min-width: 7ch;
       text-align: right;
     }
-    input[type=range] {
-      width: 100%;
-      accent-color: #3b82f6;
-    }
+    input[type=range] { width: 100%; accent-color: #3b82f6; }
     .btn-row {
       display: flex;
       gap: 0.75rem;
@@ -60,7 +84,7 @@
       padding: 0.65rem 1rem;
       border: none;
       border-radius: 8px;
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 600;
       cursor: pointer;
       transition: opacity 0.15s;
@@ -71,10 +95,10 @@
     #btn-send    { background: #059669; color: #fff; }
     #btn-send:hover:not(:disabled)    { background: #047857; }
     #log {
-      margin-top: 1.4rem;
-      max-height: 140px;
+      margin-top: 1.2rem;
+      max-height: 120px;
       overflow-y: auto;
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       color: #6b7280;
       font-family: monospace;
       line-height: 1.6;
@@ -83,39 +107,44 @@
 </head>
 <body>
 <main>
-  <h1>OpenNerfESC Konfigurator</h1>
-  <span id="status" class="status">Rozłączono</span>
+  <header>
+    <h1>OpenNerfESC</h1>
+    <div class="header-right">
+      <a class="gh-link" href="https://github.com/RadzuPL/OpenNerfESC" target="_blank" rel="noopener"
+         data-i18n-title="github_link">&#xe000; GitHub</a>
+      <button class="lang-btn" id="btn-lang" title="Switch language / Zmień język">PL</button>
+    </div>
+  </header>
+
+  <span id="status" class="status" data-i18n="disconnected">Disconnected</span>
 
   <div class="param">
     <label>
-      Czas rozbiegu (spinUpTime)
-      <span id="spin-value">500 ms</span>
+      <span data-i18n="label_spin">Spin-up time</span>
+      <span id="spin-value">200 ms</span>
     </label>
-    <input id="input-spin-up-time" type="range"
-           min="0" max="5000" step="50" value="500" />
+    <input id="input-spin-up-time" type="range" min="0" max="500" step="10" value="200" />
   </div>
 
   <div class="param">
     <label>
-      Prędkość docelowa (targetSpeed)
+      <span data-i18n="label_speed">Target speed</span>
       <span id="speed-value">75%</span>
     </label>
-    <input id="input-target-speed" type="range"
-           min="0" max="100" step="1" value="75" />
+    <input id="input-target-speed" type="range" min="0" max="100" step="1" value="75" />
   </div>
 
   <div class="param">
     <label>
-      Min. napięcie (minVoltage)
-      <span id="voltage-value">6.0 V</span>
+      <span data-i18n="label_volt">Min. voltage</span>
+      <span id="voltage-value">11.1 V</span>
     </label>
-    <input id="input-min-voltage" type="range"
-           min="3.0" max="25.0" step="0.1" value="6.0" />
+    <input id="input-min-voltage" type="range" min="3.0" max="15.0" step="0.1" value="11.1" />
   </div>
 
   <div class="btn-row">
-    <button id="btn-connect">Połącz z ESC</button>
-    <button id="btn-send" disabled>Wyślij parametry</button>
+    <button id="btn-connect" data-i18n="btn_connect">Connect to ESC</button>
+    <button id="btn-send" disabled data-i18n="btn_send">Send parameters</button>
   </div>
 
   <div id="log"></div>
