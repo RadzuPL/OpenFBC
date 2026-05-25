@@ -1,92 +1,97 @@
 // =============================================================================
 // OpenNerfESC - pwm_control.cpp
-// Sterowanie 2x silnikami DC przez MOSFET (LEDC PWM) oraz odczyt triggera.
+// Sterowanie silnikami DC przez MOSFET (LEDC PWM) oraz odczyt triggera.
 //
-// Logika działania:
-//  1. Trigger wciśnięty  -> ramp-UP od 0 do targetSpeed w czasie spinUpTime ms
-//  2. Trigger puszczony  -> natychmiastowe wygąszenie PWM (silniki stop)
+// Sekwencja działania:
+//   Trigger wciśnięty:
+//     Faza 1 (Spin-Up): PWM = 100% przez spinUpTime [ms]  <- pełny moment rozruchowy
+//     Faza 2 (Cruise):  PWM = targetSpeed [%]             <- prędkość robocza
+//   Trigger zwolniony:
+//     Natychmiastowy stop: PWM = 0%
 //
-// Oba MOSFETy sterowane identycznym sygnałem (jeden ramp, dwa kanały LEDC).
+// Oba silniki połączone równolegle -> jeden kanał LEDC, jeden pin.
 // =============================================================================
 #include <Arduino.h>
 #include "pwm_control.h"
 #include "params.h"
 #include "config.h"
 
+// Fazy sterowania
+enum MotorPhase { PHASE_IDLE, PHASE_SPINUP, PHASE_CRUISE };
+
 // --- Stan wewnętrzny ---
-static bool  triggerWasHeld = false;  // poprzedni stan triggera
-static float currentDuty    = 0.0f;  // aktualny duty cycle 0.0 - 100.0
-static uint32_t rampStartMs = 0;      // kiedy zaczął się ramp
+static MotorPhase phase         = PHASE_IDLE;
+static uint32_t   phaseStartMs  = 0;
 
 // Przelicza procent (0-100) na wartość LEDC (0-255 dla 8-bit)
 static inline uint32_t dutyToLedc(float pct) {
-  if (pct <= 0.0f) return 0;
+  if (pct <= 0.0f)   return 0;
   if (pct >= 100.0f) return 255;
   return (uint32_t)((pct / 100.0f) * 255.0f);
 }
 
 void setupPwm() {
-  // Skonfiguruj LEDC dla obu kanałów
-  ledcSetup(LEDC_CHANNEL_M1, PWM_FREQ_HZ, PWM_RESOLUTION);
-  ledcSetup(LEDC_CHANNEL_M2, PWM_FREQ_HZ, PWM_RESOLUTION);
-  ledcAttachPin(PIN_PWM_M1, LEDC_CHANNEL_M1);
-  ledcAttachPin(PIN_PWM_M2, LEDC_CHANNEL_M2);
+  ledcSetup(LEDC_CHANNEL_MOT, PWM_FREQ_HZ, PWM_RESOLUTION);
+  ledcAttachPin(PIN_PWM_MOTORS, LEDC_CHANNEL_MOT);
+  ledcWrite(LEDC_CHANNEL_MOT, 0);  // silniki zatrzymane przy starcie
 
-  // Silniki na 0 przy starcie
-  ledcWrite(LEDC_CHANNEL_M1, 0);
-  ledcWrite(LEDC_CHANNEL_M2, 0);
-
-  // Trigger: pull-down wewnętrzny, aktywny HIGH
-  pinMode(PIN_TRIGGER, INPUT);
+  pinMode(PIN_TRIGGER, INPUT);  // active HIGH, zewnętrzny pull-down lub spust
 
 #if DEBUG_MODE
-  Serial.printf("[PWM] LEDC M1=pin%d ch%d, M2=pin%d ch%d @ %uHz 8bit\n",
-    PIN_PWM_M1, LEDC_CHANNEL_M1,
-    PIN_PWM_M2, LEDC_CHANNEL_M2,
-    (unsigned)PWM_FREQ_HZ);
-  Serial.printf("[PWM] Trigger=pin%d\n", PIN_TRIGGER);
+  Serial.printf("[PWM] Setup: pin=%d ch=%d freq=%uHz 8bit | trigger=pin%d\n",
+    PIN_PWM_MOTORS, LEDC_CHANNEL_MOT, (unsigned)PWM_FREQ_HZ, PIN_TRIGGER);
 #endif
 }
 
 void updateMotors() {
   bool triggerHeld = (digitalRead(PIN_TRIGGER) == HIGH);
 
-  if (triggerHeld && !triggerWasHeld) {
-    // --- Zbocze narastające: zacznij ramp-up ---
-    rampStartMs  = millis();
-    currentDuty  = 0.0f;
-    triggerWasHeld = true;
+  if (!triggerHeld) {
+    // --- Trigger zwolniony: natychmiastowy stop ---
+    if (phase != PHASE_IDLE) {
+      phase = PHASE_IDLE;
+      ledcWrite(LEDC_CHANNEL_MOT, 0);
 #if DEBUG_MODE
-    Serial.printf("[PWM] Trigger ON  -> ramp-up start, target=%u%% in %ums\n",
-                  (unsigned)targetSpeed, (unsigned)spinUpTime);
+      Serial.println("[PWM] Trigger OFF -> STOP");
 #endif
+    }
+    return;
   }
 
-  if (triggerHeld) {
-    // --- Trigger trzymany: obsługuj ramp lub utrzymaj prędkość docelową ---
+  // --- Trigger wciśnięty ---
+  if (phase == PHASE_IDLE) {
+    // Zbocze narastające: start fazy Spin-Up
+    phaseStartMs = millis();
     if (spinUpTime == 0) {
-      // brak rampy - od razu na pełną prędkość
-      currentDuty = (float)targetSpeed;
-    } else {
-      uint32_t elapsed = millis() - rampStartMs;
-      if (elapsed >= (uint32_t)spinUpTime) {
-        currentDuty = (float)targetSpeed;
-      } else {
-        currentDuty = ((float)elapsed / (float)spinUpTime) * (float)targetSpeed;
-      }
-    }
-  } else {
-    // --- Trigger puszczony: stop ---
-    if (triggerWasHeld) {
-      currentDuty    = 0.0f;
-      triggerWasHeld = false;
+      // spinUpTime=0 oznacza pominięcie Spin-Up -> od razu Cruise
+      phase = PHASE_CRUISE;
+      ledcWrite(LEDC_CHANNEL_MOT, dutyToLedc((float)targetSpeed));
 #if DEBUG_MODE
-      Serial.println("[PWM] Trigger OFF -> motors stop");
+      Serial.printf("[PWM] Trigger ON -> CRUISE immediately @ %u%%\n", (unsigned)targetSpeed);
+#endif
+    } else {
+      phase = PHASE_SPINUP;
+      ledcWrite(LEDC_CHANNEL_MOT, 255);  // 100% PWM
+#if DEBUG_MODE
+      Serial.printf("[PWM] Trigger ON -> SPIN-UP 100%% for %ums, then CRUISE @ %u%%\n",
+                    (unsigned)spinUpTime, (unsigned)targetSpeed);
 #endif
     }
+    return;
   }
 
-  uint32_t ledc = dutyToLedc(currentDuty);
-  ledcWrite(LEDC_CHANNEL_M1, ledc);
-  ledcWrite(LEDC_CHANNEL_M2, ledc);
+  if (phase == PHASE_SPINUP) {
+    // Sprawdź czy czas Spin-Up minął
+    if ((millis() - phaseStartMs) >= (uint32_t)spinUpTime) {
+      phase = PHASE_CRUISE;
+      ledcWrite(LEDC_CHANNEL_MOT, dutyToLedc((float)targetSpeed));
+#if DEBUG_MODE
+      Serial.printf("[PWM] SPIN-UP done -> CRUISE @ %u%%\n", (unsigned)targetSpeed);
+#endif
+    }
+    // else: pozostajemy na 100%, nic nie zmieniamy
+  }
+
+  // PHASE_CRUISE: PWM już ustawione, nic nie robimy
+  // (zmiany targetSpeed przez BLE będą zastosowane przy następnym naciśnięciu)
 }
