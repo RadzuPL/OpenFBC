@@ -1,60 +1,263 @@
 <!doctype html>
 <html lang="pl">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>OpenNerfESC - Work in progress</title>
-    <style>
-      :root {
-        color-scheme: dark;
-      }
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OpenNerfESC Konfigurator</title>
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      margin: 0; min-height: 100vh; display: grid; place-items: center;
+      font-family: system-ui, sans-serif;
+      background: #111827; color: #f9fafb;
+    }
+    main {
+      width: min(520px, 94vw);
+      padding: 2rem;
+      border-radius: 14px;
+      background: #1f2937;
+      border: 1px solid #374151;
+    }
+    h1 { margin-top: 0; font-size: 1.4rem; }
+    .status {
+      display: inline-block;
+      margin-bottom: 1.5rem;
+      padding: 0.3rem 0.8rem;
+      border-radius: 99px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: #374151; color: #9ca3af;
+    }
+    .status.connected { background: #064e3b; color: #34d399; }
+    .status.error     { background: #4c0519; color: #fb7185; }
+    .param {
+      margin-bottom: 1.4rem;
+    }
+    .param label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.4rem;
+      font-size: 0.9rem;
+      color: #d1d5db;
+    }
+    .param label span { color: #60a5fa; font-weight: 600; }
+    input[type=range] {
+      width: 100%; accent-color: #3b82f6;
+    }
+    .param-row {
+      display: flex; gap: 0.6rem; align-items: center;
+    }
+    .param-row input[type=number] {
+      width: 90px;
+      padding: 0.35rem 0.5rem;
+      border-radius: 6px;
+      border: 1px solid #374151;
+      background: #111827; color: #f9fafb;
+      font-size: 0.95rem;
+    }
+    button {
+      padding: 0.6rem 1.4rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    #btn-connect { background: #3b82f6; color: #fff; }
+    #btn-connect:hover { background: #2563eb; }
+    #btn-connect:disabled { background: #374151; color: #6b7280; cursor: default; }
+    .apply-btn { background: #065f46; color: #6ee7b7; }
+    .apply-btn:hover { background: #047857; }
+    .apply-btn:disabled { background: #374151; color: #6b7280; cursor: default; }
+    .ios-note {
+      margin-top: 1.5rem;
+      padding: 0.7rem 1rem;
+      border-radius: 8px;
+      background: #292524;
+      font-size: 0.8rem;
+      color: #a8a29e;
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>&#x1F3AF; OpenNerfESC</h1>
+  <div id="status" class="status">Rozłączony</div>
+  <br>
+  <button id="btn-connect">Połącz przez Bluetooth</button>
 
-      body {
-        margin: 0;
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
-        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-        background: #111827;
-        color: #f9fafb;
-      }
+  <hr style="border-color:#374151; margin: 1.5rem 0;">
 
-      main {
-        width: min(720px, 92vw);
-        padding: 2rem;
-        border-radius: 14px;
-        background: #1f2937;
-        border: 1px solid #374151;
-      }
+  <!-- spinUpTime -->
+  <div class="param">
+    <label>
+      Czas rozpędzania
+      <span><span id="val-spinUpTime">500</span> ms</span>
+    </label>
+    <div class="param-row">
+      <input type="range" id="range-spinUpTime" min="0" max="5000" step="50" value="500" />
+      <input type="number" id="num-spinUpTime" min="0" max="5000" step="50" value="500" />
+      <button class="apply-btn" id="send-spinUpTime" disabled>Wyślij</button>
+    </div>
+  </div>
 
-      h1 {
-        margin-top: 0;
-      }
+  <!-- targetSpeed -->
+  <div class="param">
+    <label>
+      Prędkość zadana
+      <span><span id="val-targetSpeed">75</span> %</span>
+    </label>
+    <div class="param-row">
+      <input type="range" id="range-targetSpeed" min="0" max="100" step="1" value="75" />
+      <input type="number" id="num-targetSpeed" min="0" max="100" step="1" value="75" />
+      <button class="apply-btn" id="send-targetSpeed" disabled>Wyślij</button>
+    </div>
+  </div>
 
-      .status {
-        display: inline-block;
-        margin-top: 0.5rem;
-        padding: 0.35rem 0.65rem;
-        border-radius: 999px;
-        font-weight: 600;
-        color: #111827;
-        background: #fbbf24;
-      }
+  <!-- minVoltage -->
+  <div class="param">
+    <label>
+      Napięcie minimalne
+      <span><span id="val-minVoltage">6.0</span> V</span>
+    </label>
+    <div class="param-row">
+      <input type="range" id="range-minVoltage" min="3.0" max="25.0" step="0.1" value="6.0" />
+      <input type="number" id="num-minVoltage" min="3.0" max="25.0" step="0.1" value="6.0" />
+      <button class="apply-btn" id="send-minVoltage" disabled>Wyślij</button>
+    </div>
+  </div>
 
-      a {
-        color: #93c5fd;
-      }
-    </style>
-  </head>
-  <body>
-    <main>
-      <h1>OpenNerfESC</h1>
-      <p>Otwartoźródłowy sterownik PWM do wyrzutni strzałkowych Flywheel.</p>
-      <p class="status">Work in progress</p>
-      <p>
-        Repozytorium:
-        <a href="https://github.com/RadzuPL/OpenNerfESC">github.com/RadzuPL/OpenNerfESC</a>
-      </p>
-    </main>
-  </body>
+  <div class="ios-note">
+    &#x26A0;&#xFE0F; iOS / Safari: Web Bluetooth nie jest obsługiwany natywnie.
+    Użyj aplikacji <strong>Bluefy</strong> lub <strong>WebBLE</strong>.
+  </div>
+</main>
+
+<script>
+  // =======================================================================
+  // OpenNerfESC - web-config/src/index.html
+  // Web Bluetooth configuration interface.
+  // Variable names match firmware exactly (see /docs/CODING_GUIDELINES.md).
+  // =======================================================================
+
+  // --- BLE UUIDs (must match config.h in firmware) ---
+  const BLE_SERVICE_UUID       = '12345678-1234-1234-1234-123456789abc';
+  const BLE_CHAR_SPIN_UP_TIME  = '12345678-1234-1234-1234-123456789001';
+  const BLE_CHAR_TARGET_SPEED  = '12345678-1234-1234-1234-123456789002';
+  const BLE_CHAR_MIN_VOLTAGE   = '12345678-1234-1234-1234-123456789003';
+
+  // --- Validation ranges (must match config.h) ---
+  const RANGES = {
+    spinUpTime:  { min: 0,   max: 5000, step: 50  },
+    targetSpeed: { min: 0,   max: 100,  step: 1   },
+    minVoltage:  { min: 3.0, max: 25.0, step: 0.1 },
+  };
+
+  let chars = {};
+
+  // --- UI helpers ---
+  const statusEl   = document.getElementById('status');
+  const btnConnect = document.getElementById('btn-connect');
+
+  function setStatus(text, cls) {
+    statusEl.textContent = text;
+    statusEl.className = 'status ' + (cls || '');
+  }
+
+  function setSendButtons(enabled) {
+    ['spinUpTime', 'targetSpeed', 'minVoltage'].forEach(k => {
+      document.getElementById('send-' + k).disabled = !enabled;
+    });
+  }
+
+  // --- Sync range <-> number inputs ---
+  ['spinUpTime', 'targetSpeed', 'minVoltage'].forEach(key => {
+    const range = document.getElementById('range-' + key);
+    const num   = document.getElementById('num-' + key);
+    const val   = document.getElementById('val-' + key);
+
+    range.addEventListener('input', () => {
+      num.value = range.value;
+      val.textContent = range.value;
+    });
+    num.addEventListener('input', () => {
+      const r = RANGES[key];
+      let v = parseFloat(num.value);
+      if (isNaN(v)) return;
+      v = Math.min(r.max, Math.max(r.min, v));
+      range.value = v;
+      val.textContent = v;
+    });
+  });
+
+  // --- BLE connect ---
+  btnConnect.addEventListener('click', async () => {
+    if (!navigator.bluetooth) {
+      setStatus('Web Bluetooth niedostępny', 'error');
+      return;
+    }
+    try {
+      setStatus('Wyszukiwanie...', '');
+      btnConnect.disabled = true;
+
+      const device = await navigator.bluetooth.requestDevice({
+        filters: [{ services: [BLE_SERVICE_UUID] }]
+      });
+
+      device.addEventListener('gattserverdisconnected', () => {
+        setStatus('Rozłączony', '');
+        setSendButtons(false);
+        btnConnect.disabled = false;
+        chars = {};
+      });
+
+      const server  = await device.gatt.connect();
+      const service = await server.getPrimaryService(BLE_SERVICE_UUID);
+
+      chars.spinUpTime  = await service.getCharacteristic(BLE_CHAR_SPIN_UP_TIME);
+      chars.targetSpeed = await service.getCharacteristic(BLE_CHAR_TARGET_SPEED);
+      chars.minVoltage  = await service.getCharacteristic(BLE_CHAR_MIN_VOLTAGE);
+
+      setStatus('Połączony — ' + device.name, 'connected');
+      setSendButtons(true);
+      btnConnect.disabled = false;
+
+    } catch (err) {
+      setStatus('Błąd: ' + err.message, 'error');
+      btnConnect.disabled = false;
+    }
+  });
+
+  // --- Send helpers ---
+  async function sendUint16(char, value) {
+    const buf = new ArrayBuffer(2);
+    new DataView(buf).setUint16(0, value, true); // little-endian
+    await char.writeValueWithResponse(buf);
+  }
+  async function sendUint8(char, value) {
+    const buf = new ArrayBuffer(1);
+    new DataView(buf).setUint8(0, value);
+    await char.writeValueWithResponse(buf);
+  }
+  async function sendFloat(char, value) {
+    const buf = new ArrayBuffer(4);
+    new DataView(buf).setFloat32(0, value, true); // little-endian
+    await char.writeValueWithResponse(buf);
+  }
+
+  // --- Send buttons ---
+  document.getElementById('send-spinUpTime').addEventListener('click', async () => {
+    const v = parseInt(document.getElementById('num-spinUpTime').value);
+    if (chars.spinUpTime) await sendUint16(chars.spinUpTime, v);
+  });
+  document.getElementById('send-targetSpeed').addEventListener('click', async () => {
+    const v = parseInt(document.getElementById('num-targetSpeed').value);
+    if (chars.targetSpeed) await sendUint8(chars.targetSpeed, v);
+  });
+  document.getElementById('send-minVoltage').addEventListener('click', async () => {
+    const v = parseFloat(document.getElementById('num-minVoltage').value);
+    if (chars.minVoltage) await sendFloat(chars.minVoltage, v);
+  });
+</script>
+</body>
 </html>
