@@ -5,22 +5,19 @@
 #pragma once
 
 // --- Hardware (ESP32-C3 Super Mini) ---
-// Motor 1 PWM output  → MOSFET module IN  (silnik 1)
-#define PIN_PWM_M1        2
-// Motor 2 PWM output  → MOSFET module IN  (silnik 2)
-#define PIN_PWM_M2        3
-// Trigger input       → spust wyrzutni (active HIGH, internal pull-down)
+// Oba silniki połączone równolegle -> jeden pin PWM -> jeden MOSFET
+#define PIN_PWM_MOTORS    2   // LEDC PWM output -> MOSFET IN
+// Trigger (spust wyrzutni), active HIGH
 #define PIN_TRIGGER       4
-// ADC input           → dzielnik napięcia LiPo
+// ADC: dzielnik napięcia LiPo
 #define PIN_VOLTAGE_ADC   1
 
 // --- LEDC PWM ---
-// Częstotliwość 4 kHz - bezpieczna dla modułu z BJT gate-driver.
+// 4 kHz: bezpieczne dla modułu testowego z BJT gate-driver.
 // Docelowo 20 kHz po montażu TC4420 na PCB.
 #define PWM_FREQ_HZ       4000
-#define PWM_RESOLUTION    8       // bity → zakres 0-255
-#define LEDC_CHANNEL_M1   0
-#define LEDC_CHANNEL_M2   1
+#define PWM_RESOLUTION    8       // bity -> zakres 0-255
+#define LEDC_CHANNEL_MOT  0
 
 // --- Debug ---
 // Set by build_flags in platformio.ini (-D DEBUG_MODE=1 / 0)
@@ -39,8 +36,8 @@
 #define BLE_CHAR_MIN_VOLTAGE   "12345678-1234-1234-1234-123456789003"
 
 // --- Parameter defaults ---
-#define DEFAULT_SPIN_UP_TIME  200u   // ms - ramp time from 0 to target speed
-#define DEFAULT_TARGET_SPEED  75u    // %  - steady-state duty cycle
+#define DEFAULT_SPIN_UP_TIME  200u   // ms - czas fazy Spin-Up (100% PWM)
+#define DEFAULT_TARGET_SPEED  75u    // %  - wypełnienie PWM w fazie Cruise
 #define DEFAULT_MIN_VOLTAGE   11.1f  // V  - LiPo 3S cutoff
 
 // --- Parameter validation ranges ---
