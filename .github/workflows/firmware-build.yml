@@ -1,0 +1,95 @@
+name: Build and Release Firmware
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'firmware/**'
+      - '.github/workflows/firmware-build.yml'
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build (${{ matrix.env }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - env: esp32c3-prod
+            chip: ESP32-C3
+            label: esp32-c3-supermini
+          - env: esp32c6-test
+            chip: ESP32-C6
+            label: esp32-c6-devkit
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Cache PlatformIO packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.platformio
+            firmware/.pio
+          key: pio-${{ matrix.env }}-${{ hashFiles('firmware/platformio.ini') }}
+          restore-keys: pio-${{ matrix.env }}-
+
+      - name: Install PlatformIO
+        run: pip install platformio
+
+      - name: Build firmware (${{ matrix.env }})
+        run: pio run -d firmware -e ${{ matrix.env }}
+
+      - name: Collect build artifacts
+        run: |
+          BUILD_DIR="firmware/.pio/build/${{ matrix.env }}"
+          OUT_DIR="artifacts/${{ matrix.label }}"
+          mkdir -p "$OUT_DIR"
+          cp "$BUILD_DIR/firmware.bin"        "$OUT_DIR/firmware.bin"
+          cp "$BUILD_DIR/bootloader.bin"      "$OUT_DIR/bootloader.bin"
+          cp "$BUILD_DIR/partitions.bin"      "$OUT_DIR/partitions.bin"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ matrix.label }}
+          path: artifacts/${{ matrix.label }}/
+          retention-days: 30
+
+  release:
+    name: Attach to GitHub Release
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'release'
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Package and upload release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/firmware-esp32-c3-supermini/firmware.bin
+            artifacts/firmware-esp32-c3-supermini/bootloader.bin
+            artifacts/firmware-esp32-c3-supermini/partitions.bin
+            artifacts/firmware-esp32-c6-devkit/firmware.bin
+            artifacts/firmware-esp32-c6-devkit/bootloader.bin
+            artifacts/firmware-esp32-c6-devkit/partitions.bin
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
