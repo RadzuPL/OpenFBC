@@ -70,7 +70,7 @@ Architektura kodu firmware:
 | Sygnał | Pin | Opis |
 |---|---|---|
 | PWM (oba silniki) | GPIO 2 | Jeden pin → MOSFET → silniki równolegle |
-| Trigger (spust) | GPIO 4 | Wejście logiczne, active HIGH |
+| Trigger (spust) | GPIO 4 | Wejście logiczne, active HIGH, z wewnętrznym pull-down |
 | ADC napięcia | GPIO 1 | Dzielnik napięcia LiPo |
 
 ## 5. Web Config (Interfejs sterowania i konteneryzacja)
@@ -112,7 +112,7 @@ Web Flasher pozwala wgrać firmware na ESP32 bezpośrednio przez przeglądarkę 
 | Płytka | Środowisko PlatformIO | Status |
 |---|---|---|
 | ESP32-C3 Super Mini | `esp32c3-prod` | Docelowy hardware |
-| ESP32-C6 Super Mini | `esp32c6-test` | Platforma testowa (flash 4MB) |
+| ESP32-C6 Super Mini | `esp32c6-test` | Platforma testowa (custom board 4MB / FH4) |
 
 ### Flow flashowania
 1. Utwórz **Release** w GitHub → `firmware-build.yml` buduje `.bin` i dołącza do Release assets.

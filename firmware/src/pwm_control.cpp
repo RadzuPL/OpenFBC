@@ -36,7 +36,7 @@ void setupPwm() {
   ledcAttach(PIN_PWM_MOTORS, PWM_FREQ_HZ, PWM_RESOLUTION);
   ledcWrite(PIN_PWM_MOTORS, 0);  // motors stopped at startup
 
-  pinMode(PIN_TRIGGER, INPUT);  // active HIGH, external pull-down or trigger switch
+  pinMode(PIN_TRIGGER, INPUT_PULLDOWN);  // active HIGH, button to 3.3V
 
 #if DEBUG_MODE
   Serial.printf("[PWM] Setup: pin=%d freq=%uHz %dbit | trigger=pin%d\n",
