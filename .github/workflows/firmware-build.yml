@@ -9,6 +9,11 @@ on:
   release:
     types: [published, edited]
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag to upload assets to (e.g. v0.1.0). Leave empty to skip upload.'
+        required: false
+        default: ''
 
 jobs:
   build:
@@ -79,10 +84,19 @@ jobs:
     name: Attach to GitHub Release
     runs-on: ubuntu-latest
     needs: build
-    if: github.event_name == 'release'
+    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag != '')
     permissions:
       contents: write
     steps:
+      - name: Determine release tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "tag=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${{ github.event.inputs.release_tag }}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
@@ -91,6 +105,7 @@ jobs:
       - name: Package and upload release assets
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.tag.outputs.tag }}
           files: |
             artifacts/firmware-esp32-c3-supermini/firmware-esp32-c3-supermini.bin
             artifacts/firmware-esp32-c3-supermini/bootloader-esp32-c3-supermini.bin
