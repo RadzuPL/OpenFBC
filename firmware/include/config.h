@@ -7,7 +7,7 @@
 // --- Hardware (ESP32-C3 Super Mini) ---
 // Both motors wired in parallel -> single PWM pin -> single MOSFET
 #define PIN_PWM_MOTORS    2   // LEDC PWM output -> MOSFET IN
-// Trigger (flywheel rev trigger), active HIGH
+// Trigger (flywheel rev trigger), active HIGH with internal pull-down
 #define PIN_TRIGGER       4
 // ADC: LiPo voltage divider
 #define PIN_VOLTAGE_ADC   1
