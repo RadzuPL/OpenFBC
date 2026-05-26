@@ -16,8 +16,8 @@ void setup() {
   Serial.printf("[MAIN] Default spinUpTime : %u ms\n", (uint16_t)DEFAULT_SPIN_UP_TIME);
   Serial.printf("[MAIN] Default targetSpeed : %u %%\n", (uint8_t)DEFAULT_TARGET_SPEED);
   Serial.printf("[MAIN] Default minVoltage : %.2f V\n", (float)DEFAULT_MIN_VOLTAGE);
-  Serial.printf("[MAIN] Pins: PWM_M1=%d PWM_M2=%d TRIGGER=%d\n",
-                PIN_PWM_M1, PIN_PWM_M2, PIN_TRIGGER);
+  Serial.printf("[MAIN] Pins: PWM=%d TRIGGER=%d ADC=%d\n",
+                PIN_PWM_MOTORS, PIN_TRIGGER, PIN_VOLTAGE_ADC);
 #endif
 
   initBleServer();  // loads params from NVS, starts BLE
