@@ -1,0 +1,26 @@
+{
+  "name": "OpenNerfESC - ESP32-C6 DevKit",
+  "version": "latest",
+  "home_assistant_domain": "esphome",
+  "funding_url": "https://github.com/RadzuPL/OpenNerfESC",
+  "new_install_prompt_erase": false,
+  "builds": [
+    {
+      "chipFamily": "ESP32-C6",
+      "parts": [
+        {
+          "path": "https://github.com/RadzuPL/OpenNerfESC/releases/latest/download/bootloader-esp32-c6-devkit.bin",
+          "offset": 0
+        },
+        {
+          "path": "https://github.com/RadzuPL/OpenNerfESC/releases/latest/download/partitions-esp32-c6-devkit.bin",
+          "offset": 32768
+        },
+        {
+          "path": "https://github.com/RadzuPL/OpenNerfESC/releases/latest/download/firmware-esp32-c6-devkit.bin",
+          "offset": 65536
+        }
+      ]
+    }
+  ]
+}
