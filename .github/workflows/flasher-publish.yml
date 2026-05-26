@@ -38,38 +38,30 @@ jobs:
             # This ensures the flasher always ships the binaries that were just built,
             # even before a GitHub Release is created.
             RUN_ID="${{ github.event.workflow_run.id }}"
-            echo "Downloading artifacts from workflow run $RUN_ID"
-            for BOARD in esp32-c3-supermini esp32-c6-supermini; do
-              gh run download "$RUN_ID" \
-                --repo "${{ github.repository }}" \
-                -n "firmware-$BOARD" \
-                -D "web-flasher/firmware/"
-            done
             VERSION="${{ github.event.workflow_run.head_sha }}"
-            VERSION="${VERSION:0:7}"
-            echo "$VERSION" > web-flasher/firmware/version.txt
-            echo "tag=$VERSION" >> "$GITHUB_OUTPUT"
           else
-            # For push / workflow_dispatch: fall back to the latest GitHub Release.
-            RELEASE=$(curl -sf \
-              -H "Authorization: Bearer $GH_TOKEN" \
-              -H "Accept: application/vnd.github+json" \
-              "https://api.github.com/repos/${{ github.repository }}/releases" || echo "")
-            TAG=$(echo "$RELEASE" | jq -r '.[0].tag_name // empty')
-            if [ -z "$TAG" ]; then
-              echo "No release found - building flasher without firmware binaries."
-              echo "tag=none" >> "$GITHUB_OUTPUT"
-            else
-              echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-              BASE="https://github.com/${{ github.repository }}/releases/download/$TAG"
-              for BOARD in esp32-c3-supermini esp32-c6-supermini; do
-                for FILE in bootloader partitions firmware; do
-                  curl -fL "$BASE/$FILE-$BOARD.bin" -o "web-flasher/firmware/$FILE-$BOARD.bin"
-                done
-              done
-              echo "$TAG" > web-flasher/firmware/version.txt
+            # For push / workflow_dispatch: use latest successful firmware-build run.
+            RUNS_JSON=$(gh api \
+              "/repos/${{ github.repository }}/actions/workflows/firmware-build.yml/runs?branch=main&per_page=20")
+            RUN_ID=$(echo "$RUNS_JSON" | jq -r '.workflow_runs[] | select(.conclusion == "success") | .id' | head -n 1)
+            VERSION=$(echo "$RUNS_JSON" | jq -r '.workflow_runs[] | select(.conclusion == "success") | .head_sha' | head -n 1)
+            if [ -z "$RUN_ID" ] || [ "$RUN_ID" = "null" ] || [ -z "$VERSION" ] || [ "$VERSION" = "null" ]; then
+              echo "No successful firmware-build workflow run found on main."
+              exit 1
             fi
           fi
+
+          echo "Downloading artifacts from workflow run $RUN_ID"
+          for BOARD in esp32-c3-supermini esp32-c6-supermini; do
+            gh run download "$RUN_ID" \
+              --repo "${{ github.repository }}" \
+              -n "firmware-$BOARD" \
+              -D "web-flasher/firmware/"
+          done
+
+          VERSION="${VERSION:0:7}"
+          echo "$VERSION" > web-flasher/firmware/version.txt
+          echo "tag=$VERSION" >> "$GITHUB_OUTPUT"
 
           # Patch manifest versions to match whatever was baked in.
           VERSION=$(cat web-flasher/firmware/version.txt 2>/dev/null || echo "dev")
