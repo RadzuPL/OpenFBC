@@ -57,11 +57,11 @@
     }
     .board-card h2 { font-size: 1.2rem; color: #e6edf3; }
     .board-card p { color: #8b949e; font-size: 0.9rem; line-height: 1.5; }
-    .chip-badge {
-      display: inline-block;
+    .board-card h2 .chip-badge {
+      display: inline;
       color: #58a6ff;
-      font-size: 0.78rem;
-      font-weight: 600;
+      font-size: inherit;
+      font-weight: inherit;
     }
     esp-web-install-button {
       --esp-tools-button-color: #238636;
@@ -75,7 +75,7 @@
       color: #f0883e;
       font-size: 0.85rem;
     }
-    esp-web-install-button span[slot="activate"] {
+    .flash-btn {
       display: inline-block;
       background: #238636;
       color: #ffffff;
@@ -84,10 +84,9 @@
       font-size: 0.95rem;
       font-weight: 600;
       cursor: pointer;
-      border: none;
       transition: background 0.2s;
     }
-    esp-web-install-button span[slot="activate"]:hover {
+    .flash-btn:hover {
       background: #2ea043;
     }
     footer {
@@ -106,22 +105,20 @@
 
   <div class="boards">
     <div class="board-card">
-      <span class="chip-badge">ESP32-C3</span>
-      <h2>Super Mini / Production Board</h2>
+      <h2><span class="chip-badge">ESP32-C3</span> Super Mini / Production Board</h2>
       <p>For the ESP32-C3 Super Mini based OpenNerfESC production PCB.</p>
       <esp-web-install-button manifest="/manifests/manifest-esp32c3.json">
-        <span slot="activate">Flash ESP32-C3 Super Mini</span>
+        <span slot="activate" class="flash-btn">Flash ESP32-C3 Super Mini</span>
         <span slot="unsupported">Your browser does not support WebSerial. Use Chrome or Edge.</span>
         <span slot="not-allowed">WebSerial not allowed. Use HTTPS.</span>
       </esp-web-install-button>
     </div>
 
     <div class="board-card">
-      <span class="chip-badge">ESP32-C6</span>
-      <h2>Super Mini / Test Board</h2>
+      <h2><span class="chip-badge">ESP32-C6</span> Super Mini / Test Board</h2>
       <p>For the ESP32-C6 Super Mini used for development and testing.</p>
       <esp-web-install-button manifest="/manifests/manifest-esp32c6.json">
-        <span slot="activate">Flash ESP32-C6 Super Mini</span>
+        <span slot="activate" class="flash-btn">Flash ESP32-C6 Super Mini</span>
         <span slot="unsupported">Your browser does not support WebSerial. Use Chrome or Edge.</span>
         <span slot="not-allowed">WebSerial not allowed. Use HTTPS.</span>
       </esp-web-install-button>
@@ -130,7 +127,8 @@
 
   <footer>
     Firmware releases on <a href="https://github.com/RadzuPL/OpenNerfESC/releases" target="_blank">GitHub Releases</a>.
-    Source code on <a href="https://github.com/RadzuPL/OpenNerfESC" target="_blank">GitHub</a>.
+    Source code on <a href="https://github.com/RadzuPL/OpenNerfESC" target="_blank">GitHub</a>.<br>
+    Build: <span id="build-info">__BUILD_COMMIT__ &mdash; __BUILD_TIME__</span>
   </footer>
 
   <script>
@@ -139,6 +137,8 @@
       try {
         const res = await fetch('/firmware/version.txt', { cache: 'no-store' });
         if (!res.ok) throw new Error('not found');
+        const ct = res.headers.get('content-type') || '';
+        if (ct.includes('text/html')) throw new Error('html response');
         const tag = (await res.text()).trim();
         banner.textContent = `Firmware version: ${tag}`;
       } catch {
