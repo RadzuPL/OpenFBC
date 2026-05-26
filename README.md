@@ -6,11 +6,11 @@
 ## 1. Wstęp i założenia projektu
 OpenNerfESC to otwartoźródłowy, miniaturowy i bezdźwiękowy (20kHz+) sterownik PWM do silników szczotkowych Flywheel w wyrzutniach strzałkowych. Sterowanie odbywa się z poziomu przeglądarki przez Web Bluetooth API, więc nie trzeba rozkręcać wyrzutni i kręcić potencjometrem.
 
-## 2. Hardware (Elektronika i „Kanapka”)
+## 2. Hardware (Elektronika i „Kanapka")
  - **Mózg:** TENSTAR ESP32-C3 Super Mini – https://pl.aliexpress.com/item/1005009890133886.html
  - **Driver bramki MOSFET:** TC4420 – https://pl.aliexpress.com/item/1005011629643514.html
  - **Element wykonawczy:** N-MOSFET IRLR7843 (TO-252) – https://pl.aliexpress.com/item/1005006127790007.html
- - **Zabezpieczenia:** dioda Schottky’ego SB540 5A40V – https://pl.aliexpress.com/item/1005007048222899.html
+ - **Zabezpieczenia:** dioda Schottky'ego SB540 5A40V – https://pl.aliexpress.com/item/1005007048222899.html
  - **Zasilanie logiki:** Mini DC-DC 12-24V do 5V 3A – https://pl.aliexpress.com/item/1005006245122273.html
    (na płytce prawdopodobnie MP2315 z elementami dodatkowymi; moduł będzie wylutowany i potrzebne elementy trafią na docelową płytkę)
  - **Połączenia:** XT30 i solidne ścieżki z odniesieniem do `/hardware/wiring_diagram.png` (wpięcie oryginalnego Rev Triggera jako wejście logiczne ESP32).
@@ -43,9 +43,10 @@ Trigger zwolniony:
 | `minVoltage` | 3.0 – 15.0 V | 11.1 V | Minimalne napięcie pakietu LiPo. Poniżej tej granicy wyrzutnia jest blokowana (ochrona akumulatora). |
 
 ### Przykład dla domyślnych ustawień
+
 ```
 Spust wciśnięty → 0–200ms: 100% PWM (spin-up)
-                  200ms+:  75% PWM  (cruise, silniki kręcą z roboczą prędkością)
+              200ms+:  75% PWM  (cruise, silniki kręcą z roboczą prędkością)
 Spust zwolniony → natychmiastowy stop
 ```
 
@@ -69,12 +70,12 @@ Architektura kodu firmware:
 | ADC napięcia | GPIO 1 | Dzielnik napięcia LiPo |
 
 ## 5. Web Config (Interfejs sterowania i konteneryzacja)
-Jest to statyczna strona HTML/JS korzystająca z `navigator.bluetooth` – bez frameworków i bez `npm install` dla samego frontu.
+Interfejs to statyczna strona HTML/JS korzystająca z `navigator.bluetooth` — bez frameworków i bez `npm install` dla samego frontu.
 
  - Kod strony: `web-config/src/index.html`, `web-config/src/style.css`, `web-config/src/app.js`.
  - Konteneryzacja: `web-config/Dockerfile` oparty o `nginx:alpine`.
  - Automatyzacja: `.github/workflows/docker-publish.yml` buduje i publikuje obraz na GHCR przy zmianach w `web-config/`.
- - Publiczny interfejs dostepny pod adresem: **https://one.radzu.net**
+ - Publiczny interfejs dostępny pod adresem: **https://one.radzu.net**
 
 Przykładowy flow wdrożenia:
 1. Push zmian webowych do repo.
@@ -97,9 +98,39 @@ services:
  - iOS/Safari nie wspiera natywnie Web Bluetooth. Użytkownicy Apple powinni używać aplikacji **Bluefy**.
 
 ## 7. TODO (z podziałem na obszary projektu)
- - [ ] Hardware: zaprojektować PCB w EasyEDA z IRLR7843 + TC4420 + SB540 + zasilaczem 5V.
- - [ ] Hardware: zamawiłem IRLR7843 (TO-252) i czekam na dostawę.
- - [ ] Firmware: implementacja odczytu ADC napięcia i blokady przy `minVoltage`.
- - [ ] Firmware: testy na docelowym ESP32-C3 Super Mini (aktualnie testy na ESP32-C6 DevKitC-1).
- - [ ] Web Config: dodanie pola minVoltage do UI.
- - [ ] Testy: weryfikacja działania Spin-Up/Cruise na fizycznym silniku.
+
+### Hardware / elektronika
+ - [ ] Dokończyć i zweryfikować pełny schemat elektryczny.
+ - [ ] Narysować finalne PCB pod docelowe elementy (w tym elementy z modułu MP2315) – IRLR7843 + TC4420 + SB540 + zasilacz 5V.
+ - [ ] Wykonać ERC/DRC i przegląd obciążalności ścieżek mocy.
+ - [ ] Zamówić prototypowe płytki PCB.
+ - [ ] Zlutować i uruchomić pierwsze prototypy.
+ - [ ] Zweryfikować termikę i stabilność sekcji mocy pod obciążeniem.
+
+### Firmware (ESP32-C3)
+ - [ ] Implementacja odczytu ADC napięcia i blokady przy `minVoltage`.
+ - [ ] Dokończyć implementację i konfigurację wszystkich trybów sterowania PWM.
+ - [ ] Sprawdzić i dostroić parametry bezpieczeństwa (limity, stany awaryjne).
+ - [ ] Przetestować komunikację BLE i kompatybilność z różnymi telefonami.
+ - [ ] Testy na docelowym ESP32-C3 Super Mini (aktualnie testy na ESP32-C6 DevKitC-1).
+ - [ ] Uzupełnić proces flashowania i aktualizacji firmware.
+
+### Web Config / aplikacja webowa
+ - [ ] Dodanie pola minVoltage do UI.
+ - [ ] Dopracować UI i walidację parametrów.
+ - [ ] Sprawdzić stabilność połączenia Web Bluetooth i obsługę błędów.
+ - [ ] Uzupełnić dokumentację użytkownika dla konfiguratora.
+
+### Konteneryzacja i deployment
+ - [x] Skonfigurować kontener Docker dla web-config (`nginx:alpine`).
+ - [x] Zweryfikować automatyczny build/publish obrazu w GitHub Actions (tag `latest` na branchu `main`).
+ - [x] Obraz publiczny dostępny na GHCR: `ghcr.io/radzupl/opennerfesc-web-config:latest`.
+ - [x] Strona placeholder działa i jest dostępna publicznie pod `one.radzu.net`.
+ - [x] Dopiąć subdomenę do kontenera i potwierdzić dostępność po HTTPS (SSL przez Cloudflare).
+
+### Testy
+ - [ ] Weryfikacja działania Spin-Up/Cruise na fizycznym silniku.
+
+### Organizacja projektu i dokumentacja
+ - [ ] Uporządkować backlog i kolejność prac (MVP → kolejne iteracje).
+ - [ ] Uzupełnić README o status postępu po każdym większym etapie.
