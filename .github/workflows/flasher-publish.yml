@@ -1,12 +1,15 @@
 name: Publish Web Flasher Docker image
 
-# Triggered by: push to web-flasher/** or workflow_dispatch
+# Triggered by: push to web-flasher/**, after firmware build completes, or workflow_dispatch
 on:
   push:
     branches: [main]
     paths:
       - 'web-flasher/**'
       - '.github/workflows/flasher-publish.yml'
+  workflow_run:
+    workflows: ["Build and Release Firmware"]
+    types: [completed]
   workflow_dispatch:
 
 jobs:
@@ -19,6 +22,35 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Download latest firmware binaries
+        id: firmware
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RELEASE=$(curl -sf \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/latest" || echo "")
+          TAG=$(echo "$RELEASE" | jq -r '.tag_name // empty')
+          if [ -z "$TAG" ]; then
+            echo "No release found – building flasher without firmware binaries."
+            echo "tag=none" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+            mkdir -p web-flasher/firmware
+            BASE="https://github.com/${{ github.repository }}/releases/download/$TAG"
+            for BOARD in esp32-c3-supermini esp32-c6-supermini; do
+              for FILE in bootloader partitions firmware; do
+                curl -fL "$BASE/$FILE-$BOARD.bin" -o "web-flasher/firmware/$FILE-$BOARD.bin"
+              done
+            done
+            echo "$TAG" > web-flasher/firmware/version.txt
+            # Patch manifest versions to match the baked release
+            for F in web-flasher/manifests/manifest-esp32c3.json web-flasher/manifests/manifest-esp32c6.json; do
+              jq --arg v "$TAG" '.version = $v' "$F" > "$F.tmp" && mv "$F.tmp" "$F"
+            done
+          fi
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -37,7 +69,7 @@ jobs:
             type=sha,prefix=sha-
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./web-flasher
           push: true

@@ -1,6 +1,6 @@
 {
-  "name": "OpenNerfESC - ESP32-C3 SuperMini",
-  "version": "latest",
+  "name": "OpenNerfESC - ESP32-C3 Super Mini",
+  "version": "dev",
   "home_assistant_domain": "esphome",
   "funding_url": "https://github.com/RadzuPL/OpenNerfESC",
   "new_install_prompt_erase": false,
@@ -9,15 +9,15 @@
       "chipFamily": "ESP32-C3",
       "parts": [
         {
-          "path": "https://github.com/RadzuPL/OpenNerfESC/releases/latest/download/bootloader-esp32-c3-supermini.bin",
+          "path": "/firmware/bootloader-esp32-c3-supermini.bin",
           "offset": 0
         },
         {
-          "path": "https://github.com/RadzuPL/OpenNerfESC/releases/latest/download/partitions-esp32-c3-supermini.bin",
+          "path": "/firmware/partitions-esp32-c3-supermini.bin",
           "offset": 32768
         },
         {
-          "path": "https://github.com/RadzuPL/OpenNerfESC/releases/latest/download/firmware-esp32-c3-supermini.bin",
+          "path": "/firmware/firmware-esp32-c3-supermini.bin",
           "offset": 65536
         }
       ]

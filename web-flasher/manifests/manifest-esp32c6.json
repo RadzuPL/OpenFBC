@@ -1,6 +1,6 @@
 {
-  "name": "OpenNerfESC - ESP32-C6 DevKit",
-  "version": "latest",
+  "name": "OpenNerfESC - ESP32-C6 Super Mini",
+  "version": "dev",
   "home_assistant_domain": "esphome",
   "funding_url": "https://github.com/RadzuPL/OpenNerfESC",
   "new_install_prompt_erase": false,
@@ -9,15 +9,15 @@
       "chipFamily": "ESP32-C6",
       "parts": [
         {
-          "path": "https://github.com/RadzuPL/OpenNerfESC/releases/latest/download/bootloader-esp32-c6-devkit.bin",
+          "path": "/firmware/bootloader-esp32-c6-supermini.bin",
           "offset": 0
         },
         {
-          "path": "https://github.com/RadzuPL/OpenNerfESC/releases/latest/download/partitions-esp32-c6-devkit.bin",
+          "path": "/firmware/partitions-esp32-c6-supermini.bin",
           "offset": 32768
         },
         {
-          "path": "https://github.com/RadzuPL/OpenNerfESC/releases/latest/download/firmware-esp32-c6-devkit.bin",
+          "path": "/firmware/firmware-esp32-c6-supermini.bin",
           "offset": 65536
         }
       ]
