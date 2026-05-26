@@ -3,6 +3,10 @@
 ## ⚠️ UWAGA
 **TO DOPIERO SAM POCZĄTEK PROJEKTU — WIĘKSZOŚĆ TEGO, CO JEST TUTAJ AKTUALNIE STWORZONE, PRZYGOTOWAŁ COPILOT.**
 
+## Licencja
+Projekt jest udostępniany na licencji **GNU Affero General Public License v3.0 (AGPL-3.0)**.
+Pełny tekst licencji znajduje się w pliku `/LICENSE`.
+
 ## 1. Wstęp i założenia projektu
 OpenNerfESC to otwartoźródłowy, miniaturowy i bezdźwiękowy (20kHz+) sterownik PWM do silników szczotkowych Flywheel w wyrzutniach strzałkowych. Sterowanie odbywa się z poziomu przeglądarki przez Web Bluetooth API, więc nie trzeba rozkręcać wyrzutni i kręcić potencjometrem.
 
