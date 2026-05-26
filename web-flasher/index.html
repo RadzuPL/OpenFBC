@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenNerfESC Web Flasher</title>
+  <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0d1117;
+      color: #c9d1d9;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+    h1 { font-size: 2rem; margin-bottom: 8px; color: #58a6ff; }
+    .subtitle { color: #8b949e; margin-bottom: 40px; }
+    .boards {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+      max-width: 900px;
+    }
+    .board-card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 28px;
+      flex: 1;
+      min-width: 280px;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .board-card h2 { font-size: 1.2rem; color: #e6edf3; }
+    .board-card p { color: #8b949e; font-size: 0.9rem; line-height: 1.5; }
+    .chip-badge {
+      display: inline-block;
+      background: #1f6feb22;
+      border: 1px solid #1f6feb;
+      color: #58a6ff;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    esp-web-install-button {
+      --esp-tools-button-color: #238636;
+      --esp-tools-button-text-color: #ffffff;
+    }
+    esp-web-install-button[install-unsupported] {
+      display: block;
+      padding: 10px;
+      background: #21262d;
+      border-radius: 8px;
+      color: #f0883e;
+      font-size: 0.85rem;
+    }
+    .version-info {
+      font-size: 0.78rem;
+      color: #6e7681;
+    }
+    footer {
+      margin-top: 60px;
+      color: #6e7681;
+      font-size: 0.8rem;
+      text-align: center;
+    }
+    footer a { color: #58a6ff; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <h1>OpenNerfESC</h1>
+  <p class="subtitle">Web Flasher &mdash; Flash your ESC firmware directly from the browser via USB</p>
+
+  <div class="boards">
+    <div class="board-card">
+      <div>
+        <span class="chip-badge">ESP32-C3</span>
+      </div>
+      <h2>SuperMini / Production Board</h2>
+      <p>For the ESP32-C3 SuperMini based OpenNerfESC production PCB.</p>
+      <esp-web-install-button manifest="/manifests/manifest-esp32c3.json">
+        <button slot="activate">Flash ESP32-C3 SuperMini</button>
+        <span slot="unsupported">Your browser does not support WebSerial. Use Chrome or Edge.</span>
+        <span slot="not-allowed">WebSerial not allowed. Use HTTPS.</span>
+      </esp-web-install-button>
+      <div class="version-info" id="ver-c3">Loading version...</div>
+    </div>
+
+    <div class="board-card">
+      <div>
+        <span class="chip-badge">ESP32-C6</span>
+      </div>
+      <h2>DevKit / Test Board</h2>
+      <p>For the ESP32-C6 DevKit used for development and testing.</p>
+      <esp-web-install-button manifest="/manifests/manifest-esp32c6.json">
+        <button slot="activate">Flash ESP32-C6 DevKit</button>
+        <span slot="unsupported">Your browser does not support WebSerial. Use Chrome or Edge.</span>
+        <span slot="not-allowed">WebSerial not allowed. Use HTTPS.</span>
+      </esp-web-install-button>
+      <div class="version-info" id="ver-c6">Loading version...</div>
+    </div>
+  </div>
+
+  <footer>
+    <p>Firmware fetched directly from
+      <a href="https://github.com/RadzuPL/OpenNerfESC/releases" target="_blank">GitHub Releases</a>.
+      Source code on <a href="https://github.com/RadzuPL/OpenNerfESC" target="_blank">GitHub</a>.
+    </p>
+  </footer>
+
+  <script>
+    const REPO = 'RadzuPL/OpenNerfESC';
+    async function fetchLatestRelease() {
+      try {
+        const res = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const tag = data.tag_name || 'unknown';
+        document.getElementById('ver-c3').textContent = `Latest release: ${tag}`;
+        document.getElementById('ver-c6').textContent = `Latest release: ${tag}`;
+      } catch(e) {
+        console.warn('Could not fetch release info', e);
+      }
+    }
+    fetchLatestRelease();
+  </script>
+</body>
+</html>
