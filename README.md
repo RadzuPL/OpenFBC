@@ -112,7 +112,7 @@ Web Flasher pozwala wgrać firmware na ESP32 bezpośrednio przez przeglądarkę 
 | Płytka | Środowisko PlatformIO | Status |
 |---|---|---|
 | ESP32-C3 Super Mini | `esp32c3-prod` | Docelowy hardware |
-| ESP32-C6 DevKitC-1 | `esp32c6-test` | Platforma testowa |
+| ESP32-C6 Super Mini | `esp32c6-test` | Platforma testowa (flash 4MB) |
 
 ### Flow flashowania
 1. Utwórz **Release** w GitHub → `firmware-build.yml` buduje `.bin` i dołącza do Release assets.
