@@ -5,18 +5,18 @@
 #pragma once
 
 // --- Hardware (ESP32-C3 Super Mini) ---
-// Oba silniki połączone równolegle -> jeden pin PWM -> jeden MOSFET
+// Both motors wired in parallel -> single PWM pin -> single MOSFET
 #define PIN_PWM_MOTORS    2   // LEDC PWM output -> MOSFET IN
-// Trigger (spust wyrzutni), active HIGH
+// Trigger (flywheel rev trigger), active HIGH
 #define PIN_TRIGGER       4
-// ADC: dzielnik napięcia LiPo
+// ADC: LiPo voltage divider
 #define PIN_VOLTAGE_ADC   1
 
 // --- LEDC PWM ---
-// 4 kHz: bezpieczne dla modułu testowego z BJT gate-driver.
-// Docelowo 20 kHz po montażu TC4420 na PCB.
+// 4 kHz: safe for test module with BJT gate-driver.
+// Target 20 kHz after TC4420 is mounted on PCB.
 #define PWM_FREQ_HZ       4000
-#define PWM_RESOLUTION    8       // bity -> zakres 0-255
+#define PWM_RESOLUTION    8        // bits -> range 0-255
 #define LEDC_CHANNEL_MOT  0
 
 // --- Debug ---
@@ -36,9 +36,9 @@
 #define BLE_CHAR_MIN_VOLTAGE   "12345678-1234-1234-1234-123456789003"
 
 // --- Parameter defaults ---
-#define DEFAULT_SPIN_UP_TIME  200u   // ms - czas fazy Spin-Up (100% PWM)
-#define DEFAULT_TARGET_SPEED  75u    // %  - wypełnienie PWM w fazie Cruise
-#define DEFAULT_MIN_VOLTAGE   11.1f  // V  - LiPo 3S cutoff
+#define DEFAULT_SPIN_UP_TIME  200u   // ms  - Spin-Up phase duration (100% PWM)
+#define DEFAULT_TARGET_SPEED   75u   // %   - PWM duty cycle in Cruise phase
+#define DEFAULT_MIN_VOLTAGE  11.1f   // V   - LiPo 3S cutoff
 
 // --- Parameter validation ranges ---
 // spinUpTime: 0 - 500 ms
@@ -50,5 +50,5 @@
 #define TARGET_SPEED_MAX  100u
 
 // minVoltage: 3.0 - 15.0 V  (supports 1S-4S LiPo)
-#define MIN_VOLTAGE_MIN   3.0f
-#define MIN_VOLTAGE_MAX   15.0f
+#define MIN_VOLTAGE_MIN  3.0f
+#define MIN_VOLTAGE_MAX  15.0f
