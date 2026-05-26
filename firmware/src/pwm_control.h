@@ -2,11 +2,11 @@
 
 // =============================================================================
 // OpenNerfESC - pwm_control.h
-// Sterowanie silnikami: LEDC PWM (2 kanały) + odczyt triggera + ramp-up/down.
+// DC motor control: LEDC PWM (single channel) + trigger input + spin-up/down.
 // =============================================================================
 
-// Inicjalizuje LEDC, konfiguruje piny PWM i triggera.
+// Configures LEDC, sets up PWM frequency and trigger pin.
 void setupPwm();
 
-// Wywoływana co loop(). Czyta trigger, obsługuje ramp i ustawia duty cycle.
+// Called every loop(). Reads trigger, handles ramp and sets duty cycle.
 void updateMotors();
