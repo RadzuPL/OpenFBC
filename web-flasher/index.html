@@ -159,75 +159,29 @@
   </footer>
 
   <script>
-    const REPO = 'RadzuPL/OpenNerfESC';
-    let allReleases = [];
-    let blobUrls = {};
-
-    function revokeBlobUrls() {
-      Object.values(blobUrls).forEach(u => URL.revokeObjectURL(u));
-      blobUrls = {};
-    }
-
-    function buildManifestBlobUrl(board, tag) {
-      const isC3 = board === 'c3';
-      const chipFamily = isC3 ? 'ESP32-C3' : 'ESP32-C6';
-      const suffix = isC3 ? 'esp32-c3-supermini' : 'esp32-c6-supermini';
-      const base = `https://github.com/${REPO}/releases/download/${tag}`;
-      const manifest = {
-        name: `OpenNerfESC \u2013 ${chipFamily} Super Mini`,
-        version: tag,
-        home_assistant_domain: 'esphome',
-        funding_url: `https://github.com/${REPO}`,
-        new_install_prompt_erase: false,
-        builds: [{
-          chipFamily,
-          parts: [
-            { path: `${base}/bootloader-${suffix}.bin`, offset: 0 },
-            { path: `${base}/partitions-${suffix}.bin`, offset: 32768 },
-            { path: `${base}/firmware-${suffix}.bin`, offset: 65536 }
-          ]
-        }]
-      };
-      return URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: 'application/json' }));
-    }
-
-    function applyRelease(release) {
-      revokeBlobUrls();
-      blobUrls.c3 = buildManifestBlobUrl('c3', release.tag_name);
-      blobUrls.c6 = buildManifestBlobUrl('c6', release.tag_name);
-      document.getElementById('btn-c3').setAttribute('manifest', blobUrls.c3);
-      document.getElementById('btn-c6').setAttribute('manifest', blobUrls.c6);
-      const badge = document.getElementById('pre-release-badge');
-      badge.style.display = release.prerelease ? 'inline-block' : 'none';
-    }
-
     async function init() {
       const select = document.getElementById('version-select');
+      const badge = document.getElementById('pre-release-badge');
+      badge.style.display = 'none';
+      select.innerHTML = '';
+
+      const opt = document.createElement('option');
+      opt.value = 'embedded';
+      opt.textContent = 'embedded firmware';
+
       try {
-        const res = await fetch(`https://api.github.com/repos/${REPO}/releases`, { cache: 'no-store' });
-        if (!res.ok) throw new Error('API error');
-        allReleases = await res.json();
-        if (!allReleases.length) throw new Error('No releases');
-
-        select.innerHTML = '';
-        allReleases.forEach(r => {
-          const opt = document.createElement('option');
-          opt.value = r.tag_name;
-          opt.textContent = (r.name || r.tag_name) + (r.prerelease ? ' \u26a0\ufe0f pre-release' : '');
-          select.appendChild(opt);
-        });
-
-        applyRelease(allReleases[0]);
+        const res = await fetch('/firmware/version.txt', { cache: 'no-store' });
+        if (res.ok) {
+          const version = (await res.text()).trim();
+          if (version) opt.textContent = version;
+        }
       } catch {
-        select.innerHTML = '<option value="">No releases found</option>';
-        select.disabled = true;
+        // Keep fallback label when version file is not available.
       }
-    }
 
-    document.getElementById('version-select').addEventListener('change', function () {
-      const release = allReleases.find(r => r.tag_name === this.value);
-      if (release) applyRelease(release);
-    });
+      select.appendChild(opt);
+      select.disabled = true;
+    }
 
     init();
   </script>
