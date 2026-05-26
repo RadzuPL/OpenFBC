@@ -20,8 +20,8 @@ void setup() {
                 PIN_PWM_M1, PIN_PWM_M2, PIN_TRIGGER);
 #endif
 
-  initBleServer();   // ładuje params z NVS, startuje BLE
-  setupPwm();        // inicjalizuje LEDC i pin triggera
+  initBleServer();  // loads params from NVS, starts BLE
+  setupPwm();       // configures LEDC and trigger pin
 
 #if DEBUG_MODE
   Serial.println("[MAIN] Ready. Waiting for trigger.");
@@ -29,11 +29,11 @@ void setup() {
 }
 
 void loop() {
-  // Główna pętla: obsługa triggera i regulacja PWM
+  // Main loop: trigger handling and PWM regulation
   updateMotors();
 
 #if DEBUG_MODE
-  // Co 5 sekund wydrukuj stan parametrów
+  // Print parameter state every 5 seconds
   static uint32_t lastPrint = 0;
   if (millis() - lastPrint >= 5000) {
     lastPrint = millis();
@@ -45,5 +45,5 @@ void loop() {
   }
 #endif
 
-  delay(5);  // 200 Hz pętla - wystarczająca rozdzielczość rampy
+  delay(5);  // 200 Hz loop - sufficient resolution for spin-up ramp
 }
