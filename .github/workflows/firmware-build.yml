@@ -45,7 +45,10 @@ jobs:
           restore-keys: pio-${{ matrix.env }}-
 
       - name: Install PlatformIO
-        run: pip install platformio
+        # Pinned to 6.1.15 - newer versions crash on missing package-postinstall.py
+        # in pioarduino toolchain packages for ESP32-C3. Unpin when PlatformIO fixes
+        # the postinstall error handling (platformio/platformio-core#4953 or similar).
+        run: pip install "platformio==6.1.15"
 
       - name: Build firmware (${{ matrix.env }})
         run: pio run -d firmware -e ${{ matrix.env }}
