@@ -1,29 +1,29 @@
 // =============================================================================
 // OpenNerfESC - pwm_control.cpp
-// Sterowanie silnikami DC przez MOSFET (LEDC PWM) oraz odczyt triggera.
+// DC motor control via MOSFET (LEDC PWM) and trigger input.
 //
-// Sekwencja działania:
-//   Trigger wciśnięty:
-//     Faza 1 (Spin-Up): PWM = 100% przez spinUpTime [ms]  <- pełny moment rozruchowy
-//     Faza 2 (Cruise):  PWM = targetSpeed [%]             <- prędkość robocza
-//   Trigger zwolniony:
-//     Natychmiastowy stop: PWM = 0%
+// Control sequence:
+//   Trigger pressed:
+//     Phase 1 (Spin-Up): PWM = 100% for spinUpTime [ms]  <- full startup torque
+//     Phase 2 (Cruise):  PWM = targetSpeed [%]           <- operating speed
+//   Trigger released:
+//     Immediate stop: PWM = 0%
 //
-// Oba silniki połączone równolegle -> jeden kanał LEDC, jeden pin.
+// Both motors wired in parallel -> single LEDC channel, single pin.
 // =============================================================================
 #include <Arduino.h>
 #include "pwm_control.h"
 #include "params.h"
 #include "config.h"
 
-// Fazy sterowania
+// Motor control phases
 enum MotorPhase { PHASE_IDLE, PHASE_SPINUP, PHASE_CRUISE };
 
-// --- Stan wewnętrzny ---
-static MotorPhase phase         = PHASE_IDLE;
-static uint32_t   phaseStartMs  = 0;
+// --- Internal state ---
+static MotorPhase phase       = PHASE_IDLE;
+static uint32_t   phaseStartMs = 0;
 
-// Przelicza procent (0-100) na wartość LEDC (0-255 dla 8-bit)
+// Converts percent (0-100) to LEDC duty value (0-255 for 8-bit)
 static inline uint32_t dutyToLedc(float pct) {
   if (pct <= 0.0f)   return 0;
   if (pct >= 100.0f) return 255;
@@ -33,13 +33,13 @@ static inline uint32_t dutyToLedc(float pct) {
 void setupPwm() {
   ledcSetup(LEDC_CHANNEL_MOT, PWM_FREQ_HZ, PWM_RESOLUTION);
   ledcAttachPin(PIN_PWM_MOTORS, LEDC_CHANNEL_MOT);
-  ledcWrite(LEDC_CHANNEL_MOT, 0);  // silniki zatrzymane przy starcie
+  ledcWrite(LEDC_CHANNEL_MOT, 0);  // motors stopped at startup
 
-  pinMode(PIN_TRIGGER, INPUT);  // active HIGH, zewnętrzny pull-down lub spust
+  pinMode(PIN_TRIGGER, INPUT);  // active HIGH, external pull-down or trigger switch
 
 #if DEBUG_MODE
   Serial.printf("[PWM] Setup: pin=%d ch=%d freq=%uHz 8bit | trigger=pin%d\n",
-    PIN_PWM_MOTORS, LEDC_CHANNEL_MOT, (unsigned)PWM_FREQ_HZ, PIN_TRIGGER);
+                PIN_PWM_MOTORS, LEDC_CHANNEL_MOT, (unsigned)PWM_FREQ_HZ, PIN_TRIGGER);
 #endif
 }
 
@@ -47,7 +47,7 @@ void updateMotors() {
   bool triggerHeld = (digitalRead(PIN_TRIGGER) == HIGH);
 
   if (!triggerHeld) {
-    // --- Trigger zwolniony: natychmiastowy stop ---
+    // --- Trigger released: immediate stop ---
     if (phase != PHASE_IDLE) {
       phase = PHASE_IDLE;
       ledcWrite(LEDC_CHANNEL_MOT, 0);
@@ -58,12 +58,12 @@ void updateMotors() {
     return;
   }
 
-  // --- Trigger wciśnięty ---
+  // --- Trigger pressed ---
   if (phase == PHASE_IDLE) {
-    // Zbocze narastające: start fazy Spin-Up
+    // Rising edge: start Spin-Up phase
     phaseStartMs = millis();
     if (spinUpTime == 0) {
-      // spinUpTime=0 oznacza pominięcie Spin-Up -> od razu Cruise
+      // spinUpTime=0 means skip Spin-Up -> go directly to Cruise
       phase = PHASE_CRUISE;
       ledcWrite(LEDC_CHANNEL_MOT, dutyToLedc((float)targetSpeed));
 #if DEBUG_MODE
@@ -81,7 +81,7 @@ void updateMotors() {
   }
 
   if (phase == PHASE_SPINUP) {
-    // Sprawdź czy czas Spin-Up minął
+    // Check if Spin-Up time has elapsed
     if ((millis() - phaseStartMs) >= (uint32_t)spinUpTime) {
       phase = PHASE_CRUISE;
       ledcWrite(LEDC_CHANNEL_MOT, dutyToLedc((float)targetSpeed));
@@ -89,9 +89,9 @@ void updateMotors() {
       Serial.printf("[PWM] SPIN-UP done -> CRUISE @ %u%%\n", (unsigned)targetSpeed);
 #endif
     }
-    // else: pozostajemy na 100%, nic nie zmieniamy
+    // else: stay at 100%, nothing to change
   }
 
-  // PHASE_CRUISE: PWM już ustawione, nic nie robimy
-  // (zmiany targetSpeed przez BLE będą zastosowane przy następnym naciśnięciu)
+  // PHASE_CRUISE: PWM already set, nothing to do
+  // (targetSpeed changes via BLE will take effect on next trigger press)
 }
