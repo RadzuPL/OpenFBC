@@ -15,42 +15,67 @@ on:
 jobs:
   docker:
     runs-on: ubuntu-latest
+    # Skip this job when triggered by a failed firmware build.
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     permissions:
       contents: read
       packages: write
+      actions: read
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download latest firmware binaries
+      - name: Download firmware binaries
         id: firmware
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          RELEASE=$(curl -sf \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${{ github.repository }}/releases" || echo "")
-          TAG=$(echo "$RELEASE" | jq -r '.[0].tag_name // empty')
-          if [ -z "$TAG" ]; then
-            echo "No release found – building flasher without firmware binaries."
-            echo "tag=none" >> "$GITHUB_OUTPUT"
-          else
-            echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-            mkdir -p web-flasher/firmware
-            BASE="https://github.com/${{ github.repository }}/releases/download/$TAG"
+          mkdir -p web-flasher/firmware
+
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            # Download directly from the artifacts of the triggering firmware build run.
+            # This ensures the flasher always ships the binaries that were just built,
+            # even before a GitHub Release is created.
+            RUN_ID="${{ github.event.workflow_run.id }}"
+            echo "Downloading artifacts from workflow run $RUN_ID"
             for BOARD in esp32-c3-supermini esp32-c6-supermini; do
-              for FILE in bootloader partitions firmware; do
-                curl -fL "$BASE/$FILE-$BOARD.bin" -o "web-flasher/firmware/$FILE-$BOARD.bin"
+              gh run download "$RUN_ID" \
+                --repo "${{ github.repository }}" \
+                -n "firmware-$BOARD" \
+                -D "web-flasher/firmware/"
+            done
+            VERSION="${{ github.event.workflow_run.head_sha }}"
+            VERSION="${VERSION:0:7}"
+            echo "$VERSION" > web-flasher/firmware/version.txt
+            echo "tag=$VERSION" >> "$GITHUB_OUTPUT"
+          else
+            # For push / workflow_dispatch: fall back to the latest GitHub Release.
+            RELEASE=$(curl -sf \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${{ github.repository }}/releases" || echo "")
+            TAG=$(echo "$RELEASE" | jq -r '.[0].tag_name // empty')
+            if [ -z "$TAG" ]; then
+              echo "No release found - building flasher without firmware binaries."
+              echo "tag=none" >> "$GITHUB_OUTPUT"
+            else
+              echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+              BASE="https://github.com/${{ github.repository }}/releases/download/$TAG"
+              for BOARD in esp32-c3-supermini esp32-c6-supermini; do
+                for FILE in bootloader partitions firmware; do
+                  curl -fL "$BASE/$FILE-$BOARD.bin" -o "web-flasher/firmware/$FILE-$BOARD.bin"
+                done
               done
-            done
-            echo "$TAG" > web-flasher/firmware/version.txt
-            # Patch manifest versions to match the baked release
-            for F in web-flasher/manifests/manifest-esp32c3.json web-flasher/manifests/manifest-esp32c6.json; do
-              jq --arg v "$TAG" '.version = $v' "$F" > "$F.tmp" && mv "$F.tmp" "$F"
-            done
+              echo "$TAG" > web-flasher/firmware/version.txt
+            fi
           fi
+
+          # Patch manifest versions to match whatever was baked in.
+          VERSION=$(cat web-flasher/firmware/version.txt 2>/dev/null || echo "dev")
+          for F in web-flasher/manifests/manifest-esp32c3.json web-flasher/manifests/manifest-esp32c6.json; do
+            jq --arg v "$VERSION" '.version = $v' "$F" > "$F.tmp" && mv "$F.tmp" "$F"
+          done
 
       - name: Inject build info into index.html
         run: |
