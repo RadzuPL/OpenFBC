@@ -31,15 +31,16 @@ static inline uint32_t dutyToLedc(float pct) {
 }
 
 void setupPwm() {
-  ledcSetup(LEDC_CHANNEL_MOT, PWM_FREQ_HZ, PWM_RESOLUTION);
-  ledcAttachPin(PIN_PWM_MOTORS, LEDC_CHANNEL_MOT);
-  ledcWrite(LEDC_CHANNEL_MOT, 0);  // motors stopped at startup
+  // Arduino Core 3.x (ESP32-C6): use ledcAttach() instead of deprecated
+  // ledcSetup() + ledcAttachPin() pair from Core 2.x.
+  ledcAttach(PIN_PWM_MOTORS, PWM_FREQ_HZ, PWM_RESOLUTION);
+  ledcWrite(PIN_PWM_MOTORS, 0);  // motors stopped at startup
 
   pinMode(PIN_TRIGGER, INPUT);  // active HIGH, external pull-down or trigger switch
 
 #if DEBUG_MODE
-  Serial.printf("[PWM] Setup: pin=%d ch=%d freq=%uHz 8bit | trigger=pin%d\n",
-                PIN_PWM_MOTORS, LEDC_CHANNEL_MOT, (unsigned)PWM_FREQ_HZ, PIN_TRIGGER);
+  Serial.printf("[PWM] Setup: pin=%d freq=%uHz %dbit | trigger=pin%d\n",
+                PIN_PWM_MOTORS, (unsigned)PWM_FREQ_HZ, PWM_RESOLUTION, PIN_TRIGGER);
 #endif
 }
 
@@ -50,7 +51,7 @@ void updateMotors() {
     // --- Trigger released: immediate stop ---
     if (phase != PHASE_IDLE) {
       phase = PHASE_IDLE;
-      ledcWrite(LEDC_CHANNEL_MOT, 0);
+      ledcWrite(PIN_PWM_MOTORS, 0);
 #if DEBUG_MODE
       Serial.println("[PWM] Trigger OFF -> STOP");
 #endif
@@ -65,13 +66,13 @@ void updateMotors() {
     if (spinUpTime == 0) {
       // spinUpTime=0 means skip Spin-Up -> go directly to Cruise
       phase = PHASE_CRUISE;
-      ledcWrite(LEDC_CHANNEL_MOT, dutyToLedc((float)targetSpeed));
+      ledcWrite(PIN_PWM_MOTORS, dutyToLedc((float)targetSpeed));
 #if DEBUG_MODE
       Serial.printf("[PWM] Trigger ON -> CRUISE immediately @ %u%%\n", (unsigned)targetSpeed);
 #endif
     } else {
       phase = PHASE_SPINUP;
-      ledcWrite(LEDC_CHANNEL_MOT, 255);  // 100% PWM
+      ledcWrite(PIN_PWM_MOTORS, 255);  // 100% PWM
 #if DEBUG_MODE
       Serial.printf("[PWM] Trigger ON -> SPIN-UP 100%% for %ums, then CRUISE @ %u%%\n",
                     (unsigned)spinUpTime, (unsigned)targetSpeed);
@@ -84,7 +85,7 @@ void updateMotors() {
     // Check if Spin-Up time has elapsed
     if ((millis() - phaseStartMs) >= (uint32_t)spinUpTime) {
       phase = PHASE_CRUISE;
-      ledcWrite(LEDC_CHANNEL_MOT, dutyToLedc((float)targetSpeed));
+      ledcWrite(PIN_PWM_MOTORS, dutyToLedc((float)targetSpeed));
 #if DEBUG_MODE
       Serial.printf("[PWM] SPIN-UP done -> CRUISE @ %u%%\n", (unsigned)targetSpeed);
 #endif
