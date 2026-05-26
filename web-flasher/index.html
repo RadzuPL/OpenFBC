@@ -19,10 +19,32 @@
     }
     h1 { font-size: 2rem; margin-bottom: 8px; color: #58a6ff; }
     .subtitle { color: #8b949e; margin-bottom: 8px; }
-    .version-banner {
+    .version-selector {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 40px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .version-selector label {
       color: #6e7681;
       font-size: 0.85rem;
-      margin-bottom: 40px;
+      white-space: nowrap;
+    }
+    .version-selector select {
+      background: #161b22;
+      color: #c9d1d9;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      max-width: 340px;
+    }
+    .version-selector select:disabled {
+      opacity: 0.5;
+      cursor: default;
     }
     .pre-release-badge {
       display: inline-block;
@@ -33,7 +55,6 @@
       border-radius: 10px;
       font-weight: 600;
       vertical-align: middle;
-      margin-left: 4px;
     }
     .boards {
       display: flex;
@@ -101,13 +122,19 @@
 <body>
   <h1>OpenNerfESC</h1>
   <p class="subtitle">Web Flasher &mdash; Flash your ESC firmware directly from the browser via USB</p>
-  <p class="version-banner" id="version-banner">Loading firmware version&hellip;</p>
+  <div class="version-selector">
+    <label for="version-select">Firmware version:</label>
+    <select id="version-select">
+      <option value="">Loading&hellip;</option>
+    </select>
+    <span id="pre-release-badge" class="pre-release-badge" style="display:none">pre-release</span>
+  </div>
 
   <div class="boards">
     <div class="board-card">
       <h2><span class="chip-badge">ESP32-C3</span> Super Mini / Production Board</h2>
       <p>For the ESP32-C3 Super Mini based OpenNerfESC production PCB.</p>
-      <esp-web-install-button manifest="/manifests/manifest-esp32c3.json">
+      <esp-web-install-button id="btn-c3" manifest="/manifests/manifest-esp32c3.json">
         <span slot="activate" class="flash-btn">Flash ESP32-C3 Super Mini</span>
         <span slot="unsupported">Your browser does not support WebSerial. Use Chrome or Edge.</span>
         <span slot="not-allowed">WebSerial not allowed. Use HTTPS.</span>
@@ -117,7 +144,7 @@
     <div class="board-card">
       <h2><span class="chip-badge">ESP32-C6</span> Super Mini / Test Board</h2>
       <p>For the ESP32-C6 Super Mini used for development and testing.</p>
-      <esp-web-install-button manifest="/manifests/manifest-esp32c6.json">
+      <esp-web-install-button id="btn-c6" manifest="/manifests/manifest-esp32c6.json">
         <span slot="activate" class="flash-btn">Flash ESP32-C6 Super Mini</span>
         <span slot="unsupported">Your browser does not support WebSerial. Use Chrome or Edge.</span>
         <span slot="not-allowed">WebSerial not allowed. Use HTTPS.</span>
@@ -132,20 +159,77 @@
   </footer>
 
   <script>
-    async function loadVersion() {
-      const banner = document.getElementById('version-banner');
+    const REPO = 'RadzuPL/OpenNerfESC';
+    let allReleases = [];
+    let blobUrls = {};
+
+    function revokeBlobUrls() {
+      Object.values(blobUrls).forEach(u => URL.revokeObjectURL(u));
+      blobUrls = {};
+    }
+
+    function buildManifestBlobUrl(board, tag) {
+      const isC3 = board === 'c3';
+      const chipFamily = isC3 ? 'ESP32-C3' : 'ESP32-C6';
+      const suffix = isC3 ? 'esp32-c3-supermini' : 'esp32-c6-supermini';
+      const base = `https://github.com/${REPO}/releases/download/${tag}`;
+      const manifest = {
+        name: `OpenNerfESC \u2013 ${chipFamily} Super Mini`,
+        version: tag,
+        home_assistant_domain: 'esphome',
+        funding_url: `https://github.com/${REPO}`,
+        new_install_prompt_erase: false,
+        builds: [{
+          chipFamily,
+          parts: [
+            { path: `${base}/bootloader-${suffix}.bin`, offset: 0 },
+            { path: `${base}/partitions-${suffix}.bin`, offset: 32768 },
+            { path: `${base}/firmware-${suffix}.bin`, offset: 65536 }
+          ]
+        }]
+      };
+      return URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: 'application/json' }));
+    }
+
+    function applyRelease(release) {
+      revokeBlobUrls();
+      blobUrls.c3 = buildManifestBlobUrl('c3', release.tag_name);
+      blobUrls.c6 = buildManifestBlobUrl('c6', release.tag_name);
+      document.getElementById('btn-c3').setAttribute('manifest', blobUrls.c3);
+      document.getElementById('btn-c6').setAttribute('manifest', blobUrls.c6);
+      const badge = document.getElementById('pre-release-badge');
+      badge.style.display = release.prerelease ? 'inline-block' : 'none';
+    }
+
+    async function init() {
+      const select = document.getElementById('version-select');
       try {
-        const res = await fetch('/firmware/version.txt', { cache: 'no-store' });
-        if (!res.ok) throw new Error('not found');
-        const ct = res.headers.get('content-type') || '';
-        if (ct.includes('text/html')) throw new Error('html response');
-        const tag = (await res.text()).trim();
-        banner.textContent = `Firmware version: ${tag}`;
+        const res = await fetch(`https://api.github.com/repos/${REPO}/releases`, { cache: 'no-store' });
+        if (!res.ok) throw new Error('API error');
+        allReleases = await res.json();
+        if (!allReleases.length) throw new Error('No releases');
+
+        select.innerHTML = '';
+        allReleases.forEach(r => {
+          const opt = document.createElement('option');
+          opt.value = r.tag_name;
+          opt.textContent = (r.name || r.tag_name) + (r.prerelease ? ' \u26a0\ufe0f pre-release' : '');
+          select.appendChild(opt);
+        });
+
+        applyRelease(allReleases[0]);
       } catch {
-        banner.textContent = 'Firmware version: unknown';
+        select.innerHTML = '<option value="">No releases found</option>';
+        select.disabled = true;
       }
     }
-    loadVersion();
+
+    document.getElementById('version-select').addEventListener('change', function () {
+      const release = allReleases.find(r => r.tag_name === this.value);
+      if (release) applyRelease(release);
+    });
+
+    init();
   </script>
 </body>
 </html>
