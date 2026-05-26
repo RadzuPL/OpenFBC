@@ -1,5 +1,6 @@
 name: Publish Web Flasher Docker image
 
+# Triggered by: push to web-flasher/** or workflow_dispatch
 on:
   push:
     branches: [main]
