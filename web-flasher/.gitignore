@@ -1,0 +1,3 @@
+# Firmware binaries are downloaded at CI build time and baked into the Docker image.
+# They must not be committed to the repository.
+/firmware/
