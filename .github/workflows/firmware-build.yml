@@ -7,7 +7,7 @@ on:
       - 'firmware/**'
       - '.github/workflows/firmware-build.yml'
   release:
-        types: [published, edited]
+    types: [published, edited]
   workflow_dispatch:
 
 jobs:
@@ -24,7 +24,7 @@ jobs:
             label: esp32-c3-supermini
           - env: esp32c6-test
             chip: ESP32-C6
-            label: esp32-c6-devkit
+            label: esp32-c6-supermini
 
     steps:
       - name: Checkout
@@ -95,9 +95,9 @@ jobs:
             artifacts/firmware-esp32-c3-supermini/firmware-esp32-c3-supermini.bin
             artifacts/firmware-esp32-c3-supermini/bootloader-esp32-c3-supermini.bin
             artifacts/firmware-esp32-c3-supermini/partitions-esp32-c3-supermini.bin
-            artifacts/firmware-esp32-c6-devkit/firmware-esp32-c6-devkit.bin
-            artifacts/firmware-esp32-c6-devkit/bootloader-esp32-c6-devkit.bin
-            artifacts/firmware-esp32-c6-devkit/partitions-esp32-c6-devkit.bin
+            artifacts/firmware-esp32-c6-supermini/firmware-esp32-c6-supermini.bin
+            artifacts/firmware-esp32-c6-supermini/bootloader-esp32-c6-supermini.bin
+            artifacts/firmware-esp32-c6-supermini/partitions-esp32-c6-supermini.bin
           fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
