@@ -180,3 +180,6 @@ services:
 ### Organizacja projektu i dokumentacja
  - [ ] Uporządkować backlog i kolejność prac (MVP → kolejne iteracje).
  - [ ] Uzupełnić README o status postępu po każdym większym etapie.
+
+### Zależności i infrastruktura
+ - [ ] Migracja platformy PlatformIO z `pioarduino` (fork) na oficjalny `espressif32` gdy Arduino Core 3.x trafi do stabilnego PlatformIO registry — dotyczy obu środowisk (`esp32c3-prod` i `esp32c6-test`).

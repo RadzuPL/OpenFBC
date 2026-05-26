@@ -31,11 +31,10 @@ static inline uint32_t dutyToLedc(float pct) {
 }
 
 void setupPwm() {
-  // Arduino Core 2.x (ESP32-C3): use legacy ledcSetup() + ledcAttachPin().
-  // Arduino Core 3.x (ESP32-C6): ledcAttach() is available, handled by esp32c6-test env.
-  ledcSetup(0, PWM_FREQ_HZ, PWM_RESOLUTION);
-  ledcAttachPin(PIN_PWM_MOTORS, 0);
-  ledcWrite(0, 0);  // motors stopped at startup
+  // Arduino Core 3.x (pioarduino): use ledcAttach() unified API.
+  // Both envs (esp32c3-prod and esp32c6-test) use pioarduino, so this is consistent.
+  ledcAttach(PIN_PWM_MOTORS, PWM_FREQ_HZ, PWM_RESOLUTION);
+  ledcWrite(PIN_PWM_MOTORS, 0);  // motors stopped at startup
 
   pinMode(PIN_TRIGGER, INPUT);  // active HIGH, external pull-down or trigger switch
 
@@ -52,7 +51,7 @@ void updateMotors() {
     // --- Trigger released: immediate stop ---
     if (phase != PHASE_IDLE) {
       phase = PHASE_IDLE;
-      ledcWrite(0, 0);
+      ledcWrite(PIN_PWM_MOTORS, 0);
 #if DEBUG_MODE
       Serial.println("[PWM] Trigger OFF -> STOP");
 #endif
@@ -67,13 +66,13 @@ void updateMotors() {
     if (spinUpTime == 0) {
       // spinUpTime=0 means skip Spin-Up -> go directly to Cruise
       phase = PHASE_CRUISE;
-      ledcWrite(0, dutyToLedc((float)targetSpeed));
+      ledcWrite(PIN_PWM_MOTORS, dutyToLedc((float)targetSpeed));
 #if DEBUG_MODE
       Serial.printf("[PWM] Trigger ON -> CRUISE immediately @ %u%%\n", (unsigned)targetSpeed);
 #endif
     } else {
       phase = PHASE_SPINUP;
-      ledcWrite(0, 255);  // 100% PWM
+      ledcWrite(PIN_PWM_MOTORS, 255);  // 100% PWM
 #if DEBUG_MODE
       Serial.printf("[PWM] Trigger ON -> SPIN-UP 100%% for %ums, then CRUISE @ %u%%\n",
                     (unsigned)spinUpTime, (unsigned)targetSpeed);
@@ -86,7 +85,7 @@ void updateMotors() {
     // Check if Spin-Up time has elapsed
     if ((millis() - phaseStartMs) >= (uint32_t)spinUpTime) {
       phase = PHASE_CRUISE;
-      ledcWrite(0, dutyToLedc((float)targetSpeed));
+      ledcWrite(PIN_PWM_MOTORS, dutyToLedc((float)targetSpeed));
 #if DEBUG_MODE
       Serial.printf("[PWM] SPIN-UP done -> CRUISE @ %u%%\n", (unsigned)targetSpeed);
 #endif
