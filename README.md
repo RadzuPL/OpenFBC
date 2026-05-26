@@ -94,16 +94,51 @@ services:
       - "8321:80"
 ```
 
-## 6. Znane problemy
- - iOS/Safari nie wspiera natywnie Web Bluetooth. Użytkownicy Apple powinni używać aplikacji **Bluefy**.
+## 6. Web Flasher (Wgrywanie firmware przez przeglądarkę)
+Web Flasher pozwala wgrać firmware na ESP32 bezpośrednio przez przeglądarkę (Chrome/Edge) bez instalacji żadnych narzędzi — wystarczy kabel USB.
 
-## 7. TODO (z podziałem na obszary projektu)
+ - Publiczny flasher dostępny pod adresem: **https://flasher.radzu.net**
+ - Technologia: [ESP Web Tools](https://esphome.github.io/esp-web-tools/) — ta sama biblioteka co ESPHome/Tasmota.
+ - Kod strony: `web-flasher/src/index.html`, `web-flasher/manifests/manifest-esp32c3.json`, `web-flasher/manifests/manifest-esp32c6.json`.
+ - Konteneryzacja: `web-flasher/Dockerfile` oparty o `nginx:alpine`, obraz: `ghcr.io/radzupl/opennerfesc-flasher:latest`.
+ - Automatyzacja buildu firmware: `.github/workflows/firmware-build.yml` — buduje `.bin` dla obu płytek przy push do `firmware/**` lub przy tworzeniu Release.
+
+### Obsługiwane płytki
+
+| Płytka | Środowisko PlatformIO | Status |
+|---|---|---|
+| ESP32-C3 Super Mini | `esp32c3-prod` | Docelowy hardware |
+| ESP32-C6 DevKitC-1 | `esp32c6-test` | Platforma testowa |
+
+### Flow flashowania
+1. Utwórz **Release** w GitHub → `firmware-build.yml` buduje `.bin` i dołącza do Release assets.
+2. Wejdź na **https://flasher.radzu.net** w Chrome lub Edge (wymagane HTTPS + WebSerial API).
+3. Podłącz ESP32 kablem USB, kliknij przycisk odpowiedniej płytki — przeglądarka wgrywa firmware automatycznie.
+
+> **Uwaga:** WebSerial API działa tylko w Chrome i Edge. Firefox i Safari nie są wspierane.
+
+Szybki start (Docker):
+```yaml
+services:
+  opennerfesc-flasher:
+    image: ghcr.io/radzupl/opennerfesc-flasher:latest
+    container_name: OpenNerfESC-Flasher
+    restart: unless-stopped
+    ports:
+      - "8322:8080"
+```
+
+## 7. Znane problemy
+ - iOS/Safari nie wspiera natywnie Web Bluetooth. Użytkownicy Apple powinni używać aplikacji **Bluefy**.
+ - WebSerial API (Web Flasher) nie działa w Firefox ani Safari — wymagany Chrome lub Edge.
+
+## 8. TODO (z podziałem na obszary projektu)
 
 ### Hardware / elektronika
  - [ ] Dokończyć i zweryfikować pełny schemat elektryczny.
  - [ ] Narysować finalne PCB pod docelowe elementy (w tym elementy z modułu MP2315) – IRLR7843 + TC4420 + SB540 + zasilacz 5V.
  - [ ] Wykonać ERC/DRC i przegląd obciążalności ścieżek mocy.
- - [ ] Zamówić prototypowe płytki PCB.
+ - [ ] Zamówić IRLR7843 (oczekiwanie na dostawę) i prototypowe płytki PCB.
  - [ ] Zlutować i uruchomić pierwsze prototypy.
  - [ ] Zweryfikować termikę i stabilność sekcji mocy pod obciążeniem.
 
@@ -113,7 +148,7 @@ services:
  - [ ] Sprawdzić i dostroić parametry bezpieczeństwa (limity, stany awaryjne).
  - [ ] Przetestować komunikację BLE i kompatybilność z różnymi telefonami.
  - [ ] Testy na docelowym ESP32-C3 Super Mini (aktualnie testy na ESP32-C6 DevKitC-1).
- - [ ] Uzupełnić proces flashowania i aktualizacji firmware.
+ - [ ] Podnieść `PWM_FREQ_HZ` do 20 kHz po montażu TC4420 (aktualnie 4 kHz — celowo na czas testów z BJT gate-driverem).
 
 ### Web Config / aplikacja webowa
  - [ ] Dodanie pola minVoltage do UI.
@@ -121,15 +156,26 @@ services:
  - [ ] Sprawdzić stabilność połączenia Web Bluetooth i obsługę błędów.
  - [ ] Uzupełnić dokumentację użytkownika dla konfiguratora.
 
+### Web Flasher
+ - [x] Skonfigurować kontener Docker (`nginx:alpine`) i opublikować obraz na GHCR.
+ - [x] Wdrożyć flasher pod adresem `https://flasher.radzu.net` (Cloudflare Tunnel + SSL Flexible rule).
+ - [x] Zaimplementować automatyczny build firmware w GitHub Actions (matrix build: C3 + C6).
+ - [x] Manifesty ESP Web Tools dla obu płytek wskazujące na GitHub Release assets.
+ - [ ] Wykonać pierwszy Release z tagiem i zweryfikować że `.bin` pojawia się w assets.
+ - [ ] Przetestować end-to-end: Release → flasher → fizyczne ESP32.
+ - [ ] Dodać wyświetlanie aktualnej wersji firmware na stronie flashera (GitHub Releases API).
+
 ### Konteneryzacja i deployment
  - [x] Skonfigurować kontener Docker dla web-config (`nginx:alpine`).
  - [x] Zweryfikować automatyczny build/publish obrazu w GitHub Actions (tag `latest` na branchu `main`).
  - [x] Obraz publiczny dostępny na GHCR: `ghcr.io/radzupl/opennerfesc-web-config:latest`.
  - [x] Strona placeholder działa i jest dostępna publicznie pod `one.radzu.net`.
  - [x] Dopiąć subdomenę do kontenera i potwierdzić dostępność po HTTPS (SSL przez Cloudflare).
+ - [x] Skonfigurować kontener i subdomenę `flasher.radzu.net` dla Web Flashera.
 
 ### Testy
  - [ ] Weryfikacja działania Spin-Up/Cruise na fizycznym silniku.
+ - [ ] Test end-to-end Web Flasher: wgranie firmware przez przeglądarkę na ESP32-C3.
 
 ### Organizacja projektu i dokumentacja
  - [ ] Uporządkować backlog i kolejność prac (MVP → kolejne iteracje).
