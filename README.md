@@ -32,12 +32,14 @@ Silniki flywheel wymagają krótkiego impulsu pełnej mocy przy starcie, aby prz
 ```
 Trigger wciśnięty:
   Faza 1 (Spin-Up):   PWM = 100%   przez czas spinUpTime [ms]
-                      (tylko jeśli spust był puszczony przez min. 3000 ms)
+                      (tylko jeśli spust był puszczony przez min. spinUpRearmTime [ms])
+  Szybki re-trigger:  PWM = 100%   przez czas reTriggerSpinUpTime [ms]
+                      (gdy spinUpRearmTime jeszcze nie minął)
   Faza 2 (Cruise):    PWM = targetSpeed [%]   (aż do zwolnienia spustu)
 
 Trigger zwolniony:
   Natychmiastowy stop: PWM = 0%
-  Ponowny Spin-Up odblokowuje się dopiero po 3000 ms bez wciskania spustu
+  Ponowny pełny Spin-Up odblokowuje się dopiero po spinUpRearmTime ms bez wciskania spustu
 ```
 
 ### Parametry konfiguracyjne (ustawiane przez BLE / Web Config)
@@ -45,8 +47,12 @@ Trigger zwolniony:
 | Parametr | Zakres | Domyślnie | Opis |
 |---|---|---|---|
 | `spinUpTime` | 0 – 500 ms | 200 ms | Czas trwania fazy Spin-Up na pełnej mocy (100% PWM). Ustawienie 0 pomija fazę Spin-Up i od razu przechodzi do Cruise. |
+| `spinUpRearmTime` | 0 – 5000 ms | 3000 ms | Minimalny czas zwolnienia spustu wymagany do ponownego uruchomienia pełnego Spin-Up. |
+| `reTriggerSpinUpTime` | 0 – 100 ms | 50 ms | Krótki Spin-Up używany przy szybkim ponownym naciśnięciu spustu zanim minie `spinUpRearmTime`. Wartość jest ograniczona do `<= spinUpTime`. |
 | `targetSpeed` | 0 – 100 % | 75 % | Wypełnienie PWM w fazie Cruise — prędkość robocza silników podczas włączonego spustu. |
 | `minVoltage` | 3.0 – 15.0 V | 11.1 V | Minimalne napięcie pakietu LiPo. Poniżej tej granicy wyrzutnia jest blokowana (ochrona akumulatora). |
+
+Konfigurator Web Config odczytuje też aktualne napięcie baterii (read-only) przez BLE, aby umożliwić kalibrację i weryfikację dzielnika napięcia.
 
 ### Przykład dla domyślnych ustawień
 
@@ -157,7 +163,8 @@ services:
  - [ ] Podnieść `PWM_FREQ_HZ` do 20 kHz po montażu TC4420 (aktualnie 4 kHz — celowo na czas testów z BJT gate-driverem).
 
 ### Web Config / aplikacja webowa
- - [ ] Dodanie pola minVoltage do UI.
+ - [x] Dodanie pól minVoltage, spinUpRearmTime i reTriggerSpinUpTime do UI.
+ - [x] Dodanie odczytu napięcia baterii (read-only) w konfiguratorze.
  - [ ] Dopracować UI i walidację parametrów.
  - [ ] Sprawdzić stabilność połączenia Web Bluetooth i obsługę błędów.
  - [ ] Uzupełnić dokumentację użytkownika dla konfiguratora.

@@ -1,7 +1,8 @@
 // =============================================================================
 // OpenNerfESC - ble_server.cpp
 // BLE GATT server - NimBLE-Arduino 2.x.
-// Exposes spinUpTime, targetSpeed, minVoltage as readable/writable
+// Exposes spinUpTime, spinUpRearmTime, reTriggerSpinUpTime, targetSpeed,
+// minVoltage as readable/writable and batteryVoltage as read-only.
 // characteristics. Parameter values live in params.cpp (NVS-backed).
 // =============================================================================
 #include <Arduino.h>
@@ -12,6 +13,15 @@
 
 // --- Connection state ---
 static bool bleConnected = false;
+
+static float readBatteryVoltage() {
+  uint32_t pinMilliVolts = analogReadMilliVolts(PIN_VOLTAGE_ADC);
+  if (pinMilliVolts == 0) {
+    uint16_t raw = analogRead(PIN_VOLTAGE_ADC);
+    pinMilliVolts = (uint32_t)(((float)raw / 4095.0f) * 3300.0f);
+  }
+  return ((float)pinMilliVolts / 1000.0f) * BATTERY_DIVIDER_RATIO;
+}
 
 // --- BLE server callbacks ---
 class ServerCallbacks : public NimBLEServerCallbacks {
@@ -37,9 +47,45 @@ class SpinUpTimeCallback : public NimBLECharacteristicCallbacks {
       memcpy(&value, pChar->getValue().data(), sizeof(uint16_t));
       if (value >= SPIN_UP_TIME_MIN && value <= SPIN_UP_TIME_MAX) {
         spinUpTime = value;
+        if (reTriggerSpinUpTime > spinUpTime) {
+          reTriggerSpinUpTime = spinUpTime;
+        }
         saveParams();
 #if DEBUG_MODE
-        Serial.printf("[BLE] spinUpTime updated: %u ms\n", spinUpTime);
+        Serial.printf("[BLE] spinUpTime updated: %u ms (reSpin=%u ms)\n", spinUpTime, reTriggerSpinUpTime);
+#endif
+      }
+    }
+  }
+};
+
+class SpinUpRearmTimeCallback : public NimBLECharacteristicCallbacks {
+  void onWrite(NimBLECharacteristic* pChar, NimBLEConnInfo& connInfo) override {
+    if (pChar->getLength() == sizeof(uint16_t)) {
+      uint16_t value = 0;
+      memcpy(&value, pChar->getValue().data(), sizeof(uint16_t));
+      if (value >= SPIN_UP_REARM_TIME_MIN && value <= SPIN_UP_REARM_TIME_MAX) {
+        spinUpRearmTime = value;
+        saveParams();
+#if DEBUG_MODE
+        Serial.printf("[BLE] spinUpRearmTime updated: %u ms\n", spinUpRearmTime);
+#endif
+      }
+    }
+  }
+};
+
+class ReTriggerSpinUpTimeCallback : public NimBLECharacteristicCallbacks {
+  void onWrite(NimBLECharacteristic* pChar, NimBLEConnInfo& connInfo) override {
+    if (pChar->getLength() == sizeof(uint16_t)) {
+      uint16_t value = 0;
+      memcpy(&value, pChar->getValue().data(), sizeof(uint16_t));
+      if (value >= RETRIGGER_SPIN_UP_TIME_MIN && value <= RETRIGGER_SPIN_UP_TIME_MAX) {
+        reTriggerSpinUpTime = (value <= spinUpTime) ? value : spinUpTime;
+        saveParams();
+#if DEBUG_MODE
+        Serial.printf("[BLE] reTriggerSpinUpTime updated: %u ms (requested %u ms)\n",
+                      reTriggerSpinUpTime, value);
 #endif
       }
     }
@@ -78,9 +124,25 @@ class MinVoltageCallback : public NimBLECharacteristicCallbacks {
   }
 };
 
+class BatteryVoltageCallback : public NimBLECharacteristicCallbacks {
+  void onRead(NimBLECharacteristic* pChar, NimBLEConnInfo& connInfo) override {
+    float batteryVoltage = readBatteryVoltage();
+    pChar->setValue(batteryVoltage);
+#if DEBUG_MODE
+    Serial.printf("[BLE] batteryVoltage read: %.2f V\n", batteryVoltage);
+#endif
+  }
+};
+
 void initBleServer() {
   // Load last saved parameters from NVS flash
   loadParams();
+
+  pinMode(PIN_VOLTAGE_ADC, INPUT);
+  analogReadResolution(12);
+#if defined(ARDUINO_ARCH_ESP32)
+  analogSetPinAttenuation(PIN_VOLTAGE_ADC, ADC_11db);
+#endif
 
   // Init BLE stack
   NimBLEDevice::init(BLE_DEVICE_NAME);
@@ -100,6 +162,18 @@ void initBleServer() {
   pSpinUpTime->setCallbacks(new SpinUpTimeCallback());
   pSpinUpTime->setValue(spinUpTime);
 
+  NimBLECharacteristic* pSpinUpRearmTime = pService->createCharacteristic(
+    BLE_CHAR_SPIN_UP_REARM_TIME,
+    NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::READ);
+  pSpinUpRearmTime->setCallbacks(new SpinUpRearmTimeCallback());
+  pSpinUpRearmTime->setValue(spinUpRearmTime);
+
+  NimBLECharacteristic* pReTriggerSpinUpTime = pService->createCharacteristic(
+    BLE_CHAR_RETRIGGER_SPIN_UP_TIME,
+    NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::READ);
+  pReTriggerSpinUpTime->setCallbacks(new ReTriggerSpinUpTimeCallback());
+  pReTriggerSpinUpTime->setValue(reTriggerSpinUpTime);
+
   NimBLECharacteristic* pTargetSpeed = pService->createCharacteristic(
     BLE_CHAR_TARGET_SPEED,
     NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::READ);
@@ -111,6 +185,12 @@ void initBleServer() {
     NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::READ);
   pMinVoltage->setCallbacks(new MinVoltageCallback());
   pMinVoltage->setValue(minVoltage);
+
+  NimBLECharacteristic* pBatteryVoltage = pService->createCharacteristic(
+    BLE_CHAR_BATTERY_VOLTAGE,
+    NIMBLE_PROPERTY::READ);
+  pBatteryVoltage->setCallbacks(new BatteryVoltageCallback());
+  pBatteryVoltage->setValue(readBatteryVoltage());
 
   // Service MUST be started before pServer->start() in NimBLE 2.x
   

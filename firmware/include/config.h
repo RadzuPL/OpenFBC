@@ -34,17 +34,29 @@
 #define BLE_CHAR_SPIN_UP_TIME  "12345678-1234-1234-1234-123456789001"
 #define BLE_CHAR_TARGET_SPEED  "12345678-1234-1234-1234-123456789002"
 #define BLE_CHAR_MIN_VOLTAGE   "12345678-1234-1234-1234-123456789003"
+#define BLE_CHAR_SPIN_UP_REARM_TIME   "12345678-1234-1234-1234-123456789004"
+#define BLE_CHAR_RETRIGGER_SPIN_UP_TIME "12345678-1234-1234-1234-123456789005"
+#define BLE_CHAR_BATTERY_VOLTAGE      "12345678-1234-1234-1234-123456789006"
 
 // --- Parameter defaults ---
 #define DEFAULT_SPIN_UP_TIME  200u   // ms  - Spin-Up phase duration (100% PWM)
 #define DEFAULT_TARGET_SPEED   75u   // %   - PWM duty cycle in Cruise phase
 #define DEFAULT_MIN_VOLTAGE  11.1f   // V   - LiPo 3S cutoff
-#define SPIN_UP_REARM_TIME   3000u   // ms  - minimum trigger release time before spin-up can arm again
+#define DEFAULT_SPIN_UP_REARM_TIME 3000u // ms - minimum trigger release time before main spin-up can arm again
+#define DEFAULT_RETRIGGER_SPIN_UP_TIME 50u // ms - short spin-up duration for quick re-trigger
 
 // --- Parameter validation ranges ---
 // spinUpTime: 0 - 500 ms
 #define SPIN_UP_TIME_MIN  0u
 #define SPIN_UP_TIME_MAX  500u
+
+// spinUpRearmTime: 0 - 5000 ms
+#define SPIN_UP_REARM_TIME_MIN 0u
+#define SPIN_UP_REARM_TIME_MAX 5000u
+
+// reTriggerSpinUpTime: 0 - 100 ms
+#define RETRIGGER_SPIN_UP_TIME_MIN 0u
+#define RETRIGGER_SPIN_UP_TIME_MAX 100u
 
 // targetSpeed: 0 - 100 %
 #define TARGET_SPEED_MIN  0u
@@ -53,3 +65,6 @@
 // minVoltage: 3.0 - 15.0 V  (supports 1S-4S LiPo)
 #define MIN_VOLTAGE_MIN  3.0f
 #define MIN_VOLTAGE_MAX  15.0f
+
+// ADC voltage conversion: battery voltage = ADC pin voltage * divider ratio.
+#define BATTERY_DIVIDER_RATIO 4.0f

@@ -5,7 +5,8 @@
 // Control sequence:
 //   Trigger pressed:
 //     Phase 1 (Spin-Up): PWM = 100% for spinUpTime [ms]  <- full startup torque
-//                       only if trigger was released for at least SPIN_UP_REARM_TIME [ms]
+//                       only if trigger was released for at least spinUpRearmTime [ms]
+//                       otherwise use reTriggerSpinUpTime [ms]
 //     Phase 2 (Cruise):  PWM = targetSpeed [%]           <- operating speed
 //   Trigger released:
 //     Immediate stop: PWM = 0%
@@ -23,6 +24,7 @@ enum MotorPhase { PHASE_IDLE, PHASE_SPINUP, PHASE_CRUISE };
 // --- Internal state ---
 static MotorPhase phase       = PHASE_IDLE;
 static uint32_t   phaseStartMs = 0;
+static uint16_t   activeSpinUpDurationMs = 0;
 static uint32_t   releaseStartMs = 0;
 static bool       previousTriggerHeld = false;
 static bool       spinUpArmed = true;
@@ -67,10 +69,10 @@ void updateMotors() {
 #endif
     }
 
-    if (!spinUpArmed && (now - releaseStartMs) >= SPIN_UP_REARM_TIME) {
+    if (!spinUpArmed && (now - releaseStartMs) >= spinUpRearmTime) {
       spinUpArmed = true;
 #if DEBUG_MODE
-      Serial.printf("[PWM] Spin-Up re-armed after %ums release\n", (unsigned)SPIN_UP_REARM_TIME);
+      Serial.printf("[PWM] Spin-Up re-armed after %ums release\n", (unsigned)spinUpRearmTime);
 #endif
     }
 
@@ -82,24 +84,30 @@ void updateMotors() {
   if (!previousTriggerHeld && phase == PHASE_IDLE) {
     // Rising edge: start Spin-Up phase
     phaseStartMs = now;
-    if (spinUpTime == 0 || !spinUpArmed) {
-      // spinUpTime=0 or blocked re-arm means skip Spin-Up -> go directly to Cruise
+    activeSpinUpDurationMs = spinUpArmed ? spinUpTime : reTriggerSpinUpTime;
+    if (activeSpinUpDurationMs == 0) {
+      // zero spin-up means go directly to Cruise
       phase = PHASE_CRUISE;
       ledcWrite(PIN_PWM_MOTORS, dutyToLedc((float)targetSpeed));
 #if DEBUG_MODE
-      if (spinUpTime == 0) {
+      if (spinUpArmed) {
         Serial.printf("[PWM] Trigger ON -> CRUISE immediately @ %u%%\n", (unsigned)targetSpeed);
       } else {
-        Serial.printf("[PWM] Trigger ON -> CRUISE @ %u%% (spin-up blocked for %ums release)\n",
-                      (unsigned)targetSpeed, (unsigned)SPIN_UP_REARM_TIME);
+        Serial.printf("[PWM] Trigger ON -> CRUISE @ %u%% (quick spin-up disabled)\n",
+                      (unsigned)targetSpeed);
       }
 #endif
     } else {
       phase = PHASE_SPINUP;
       ledcWrite(PIN_PWM_MOTORS, 255);  // 100% PWM
 #if DEBUG_MODE
-      Serial.printf("[PWM] Trigger ON -> SPIN-UP 100%% for %ums, then CRUISE @ %u%%\n",
-                    (unsigned)spinUpTime, (unsigned)targetSpeed);
+      if (spinUpArmed) {
+        Serial.printf("[PWM] Trigger ON -> SPIN-UP 100%% for %ums, then CRUISE @ %u%%\n",
+                      (unsigned)activeSpinUpDurationMs, (unsigned)targetSpeed);
+      } else {
+        Serial.printf("[PWM] Trigger ON -> QUICK SPIN-UP 100%% for %ums (rearm in %ums), then CRUISE @ %u%%\n",
+                      (unsigned)activeSpinUpDurationMs, (unsigned)spinUpRearmTime, (unsigned)targetSpeed);
+      }
 #endif
     }
   } else if (phase == PHASE_IDLE) {
@@ -108,7 +116,7 @@ void updateMotors() {
 
   if (phase == PHASE_SPINUP) {
     // Check if Spin-Up time has elapsed
-    if ((now - phaseStartMs) >= (uint32_t)spinUpTime) {
+    if ((now - phaseStartMs) >= (uint32_t)activeSpinUpDurationMs) {
       phase = PHASE_CRUISE;
       ledcWrite(PIN_PWM_MOTORS, dutyToLedc((float)targetSpeed));
 #if DEBUG_MODE
