@@ -32,10 +32,12 @@ Silniki flywheel wymagają krótkiego impulsu pełnej mocy przy starcie, aby prz
 ```
 Trigger wciśnięty:
   Faza 1 (Spin-Up):   PWM = 100%   przez czas spinUpTime [ms]
+                      (tylko jeśli spust był puszczony przez min. 3000 ms)
   Faza 2 (Cruise):    PWM = targetSpeed [%]   (aż do zwolnienia spustu)
 
 Trigger zwolniony:
   Natychmiastowy stop: PWM = 0%
+  Ponowny Spin-Up odblokowuje się dopiero po 3000 ms bez wciskania spustu
 ```
 
 ### Parametry konfiguracyjne (ustawiane przez BLE / Web Config)

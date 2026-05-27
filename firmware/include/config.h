@@ -39,6 +39,7 @@
 #define DEFAULT_SPIN_UP_TIME  200u   // ms  - Spin-Up phase duration (100% PWM)
 #define DEFAULT_TARGET_SPEED   75u   // %   - PWM duty cycle in Cruise phase
 #define DEFAULT_MIN_VOLTAGE  11.1f   // V   - LiPo 3S cutoff
+#define SPIN_UP_REARM_TIME   3000u   // ms  - minimum trigger release time before spin-up can arm again
 
 // --- Parameter validation ranges ---
 // spinUpTime: 0 - 500 ms
