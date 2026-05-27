@@ -179,7 +179,7 @@ services:
  - [x] Wdrożyć flasher pod adresem `https://flasher.radzu.net` (Cloudflare Tunnel + SSL Flexible rule).
  - [x] Zaimplementować automatyczny build firmware w GitHub Actions (matrix build: C3 + C6).
  - [x] Manifesty ESP Web Tools dla obu płytek wskazujące na GitHub Release assets.
- - [ ] Wykonać pierwszy Release z tagiem i zweryfikować że `.bin` pojawia się w assets.
+ - [x] Wykonać pierwszy Release z tagiem i zweryfikować że `.bin` pojawia się w assets.
  - [ ] Przetestować end-to-end: Release → flasher → fizyczne ESP32.
  - [ ] Dodać wyświetlanie aktualnej wersji firmware na stronie flashera (GitHub Releases API).
 
