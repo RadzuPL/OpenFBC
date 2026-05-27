@@ -70,7 +70,7 @@ Architektura kodu firmware:
 | Sygnał | Pin | Opis |
 |---|---|---|
 | PWM (oba silniki) | GPIO 2 | Jeden pin → MOSFET → silniki równolegle |
-| Trigger (spust) | GPIO 4 | Wejście logiczne, active HIGH, z wewnętrznym pull-down |
+| Trigger (spust) | GPIO 4 | Wejście logiczne, active LOW, z wewnętrznym pull-up (przycisk do masy) |
 | ADC napięcia | GPIO 1 | Dzielnik napięcia LiPo |
 
 ## 5. Web Config (Interfejs sterowania i konteneryzacja)

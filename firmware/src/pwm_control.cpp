@@ -36,7 +36,7 @@ void setupPwm() {
   ledcAttach(PIN_PWM_MOTORS, PWM_FREQ_HZ, PWM_RESOLUTION);
   ledcWrite(PIN_PWM_MOTORS, 0);  // motors stopped at startup
 
-  pinMode(PIN_TRIGGER, INPUT_PULLDOWN);  // active HIGH, button to 3.3V
+  pinMode(PIN_TRIGGER, INPUT_PULLUP);  // active LOW, button to GND
 
 #if DEBUG_MODE
   Serial.printf("[PWM] Setup: pin=%d freq=%uHz %dbit | trigger=pin%d\n",
@@ -45,7 +45,7 @@ void setupPwm() {
 }
 
 void updateMotors() {
-  bool triggerHeld = (digitalRead(PIN_TRIGGER) == HIGH);
+  bool triggerHeld = (digitalRead(PIN_TRIGGER) == LOW);
 
   if (!triggerHeld) {
     // --- Trigger released: immediate stop ---
