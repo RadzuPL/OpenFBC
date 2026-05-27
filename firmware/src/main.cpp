@@ -14,6 +14,8 @@ void setup() {
   delay(10);
   Serial.println("[MAIN] OpenNerfESC starting (DEBUG build)");
   Serial.printf("[MAIN] Default spinUpTime : %u ms\n", (uint16_t)DEFAULT_SPIN_UP_TIME);
+  Serial.printf("[MAIN] Default spinUpRearmTime : %u ms\n", (uint16_t)DEFAULT_SPIN_UP_REARM_TIME);
+  Serial.printf("[MAIN] Default reTriggerSpinUpTime : %u ms\n", (uint16_t)DEFAULT_RETRIGGER_SPIN_UP_TIME);
   Serial.printf("[MAIN] Default targetSpeed : %u %%\n", (uint8_t)DEFAULT_TARGET_SPEED);
   Serial.printf("[MAIN] Default minVoltage : %.2f V\n", (float)DEFAULT_MIN_VOLTAGE);
   Serial.printf("[MAIN] Pins: PWM=%d TRIGGER=%d ADC=%d\n",
@@ -37,8 +39,10 @@ void loop() {
   static uint32_t lastPrint = 0;
   if (millis() - lastPrint >= 5000) {
     lastPrint = millis();
-    Serial.printf("[MAIN] spinUpTime=%u ms | targetSpeed=%u%% | minVoltage=%.2fV | BLE=%s\n",
+    Serial.printf("[MAIN] spinUp=%u ms | rearm=%u ms | reSpin=%u ms | speed=%u%% | minVoltage=%.2fV | BLE=%s\n",
                   spinUpTime,
+                  spinUpRearmTime,
+                  reTriggerSpinUpTime,
                   targetSpeed,
                   minVoltage,
                   isBleConnected() ? "connected" : "advertising");
