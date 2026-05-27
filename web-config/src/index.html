@@ -103,76 +103,87 @@
       font-family: monospace;
       line-height: 1.6;
     }
+    footer {
+      margin-top: 1rem;
+      color: #6e7681;
+      font-size: 0.78rem;
+      text-align: center;
+    }
+    footer a { color: #60a5fa; text-decoration: none; }
   </style>
 </head>
 <body>
-<main>
-  <header>
-    <h1>OpenNerfESC</h1>
-    <div class="header-right">
-      <a class="gh-link" href="https://github.com/RadzuPL/OpenNerfESC" target="_blank" rel="noopener"
-         data-i18n-title="github_link">&#xe000; GitHub</a>
-      <button class="lang-btn" id="btn-lang" title="Switch language / Zmień język">PL</button>
+  <main>
+    <header>
+      <h1>OpenNerfESC</h1>
+      <div class="header-right">
+        <a class="gh-link" href="https://github.com/RadzuPL/OpenNerfESC" target="_blank" rel="noopener"
+           data-i18n-title="github_link">&#xe000; GitHub</a>
+        <button class="lang-btn" id="btn-lang" title="Switch language / Zmień język">PL</button>
+      </div>
+    </header>
+
+    <span id="status" class="status" data-i18n="disconnected">Disconnected</span>
+
+    <div class="param">
+      <label>
+        <span data-i18n="label_spin">Spin-up time</span>
+        <span id="spin-value">200 ms</span>
+      </label>
+      <input id="input-spin-up-time" type="range" min="0" max="500" step="10" value="200" />
     </div>
-  </header>
 
-  <span id="status" class="status" data-i18n="disconnected">Disconnected</span>
+    <div class="param">
+      <label>
+        <span data-i18n="label_rearm">Spin-up rearm time</span>
+        <span id="rearm-value">3000 ms</span>
+      </label>
+      <input id="input-spin-up-rearm-time" type="range" min="0" max="5000" step="50" value="3000" />
+    </div>
 
-  <div class="param">
-    <label>
-      <span data-i18n="label_spin">Spin-up time</span>
-      <span id="spin-value">200 ms</span>
-    </label>
-    <input id="input-spin-up-time" type="range" min="0" max="500" step="10" value="200" />
-  </div>
+    <div class="param">
+      <label>
+        <span data-i18n="label_retrigger_spin">Quick re-trigger spin-up</span>
+        <span id="retrigger-spin-value">50 ms</span>
+      </label>
+      <input id="input-retrigger-spin-up-time" type="range" min="0" max="100" step="1" value="50" />
+    </div>
 
-  <div class="param">
-    <label>
-      <span data-i18n="label_rearm">Spin-up rearm time</span>
-      <span id="rearm-value">3000 ms</span>
-    </label>
-    <input id="input-spin-up-rearm-time" type="range" min="0" max="5000" step="50" value="3000" />
-  </div>
+    <div class="param">
+      <label>
+        <span data-i18n="label_speed">Target speed</span>
+        <span id="speed-value">75%</span>
+      </label>
+      <input id="input-target-speed" type="range" min="0" max="100" step="1" value="75" />
+    </div>
 
-  <div class="param">
-    <label>
-      <span data-i18n="label_retrigger_spin">Quick re-trigger spin-up</span>
-      <span id="retrigger-spin-value">50 ms</span>
-    </label>
-    <input id="input-retrigger-spin-up-time" type="range" min="0" max="100" step="1" value="50" />
-  </div>
+    <div class="param">
+      <label>
+        <span data-i18n="label_volt">Min. voltage</span>
+        <span id="voltage-value">11.1 V</span>
+      </label>
+      <input id="input-min-voltage" type="range" min="3.0" max="15.0" step="0.1" value="11.1" />
+    </div>
 
-  <div class="param">
-    <label>
-      <span data-i18n="label_speed">Target speed</span>
-      <span id="speed-value">75%</span>
-    </label>
-    <input id="input-target-speed" type="range" min="0" max="100" step="1" value="75" />
-  </div>
+    <div class="param">
+      <label>
+        <span data-i18n="label_battery_voltage">Battery voltage (read-only)</span>
+        <span id="battery-voltage-value">--.- V</span>
+      </label>
+      <button id="btn-read-battery" disabled data-i18n="btn_read_battery">Read battery voltage</button>
+    </div>
 
-  <div class="param">
-    <label>
-      <span data-i18n="label_volt">Min. voltage</span>
-      <span id="voltage-value">11.1 V</span>
-    </label>
-    <input id="input-min-voltage" type="range" min="3.0" max="15.0" step="0.1" value="11.1" />
-  </div>
+    <div class="btn-row">
+      <button id="btn-connect" data-i18n="btn_connect">Connect to ESC</button>
+      <button id="btn-send" disabled data-i18n="btn_send">Send parameters</button>
+    </div>
 
-  <div class="param">
-    <label>
-      <span data-i18n="label_battery_voltage">Battery voltage (read-only)</span>
-      <span id="battery-voltage-value">--.- V</span>
-    </label>
-    <button id="btn-read-battery" disabled data-i18n="btn_read_battery">Read battery voltage</button>
-  </div>
-
-  <div class="btn-row">
-    <button id="btn-connect" data-i18n="btn_connect">Connect to ESC</button>
-    <button id="btn-send" disabled data-i18n="btn_send">Send parameters</button>
-  </div>
-
-  <div id="log"></div>
-</main>
-<script src="app.js"></script>
+    <div id="log"></div>
+  </main>
+  <footer>
+    Source code on <a href="https://github.com/RadzuPL/OpenNerfESC" target="_blank" rel="noopener">GitHub</a>.<br>
+    Build: <span id="build-info">__BUILD_COMMIT__ &mdash; __BUILD_TIME__</span>
+  </footer>
+<script src="app.js?v=__BUILD_COMMIT__"></script>
 </body>
 </html>

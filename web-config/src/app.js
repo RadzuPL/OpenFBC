@@ -25,9 +25,9 @@ const STRINGS = {
     log_connecting:  'Connecting…',
     log_connected:   'Connected to ',
     log_disconnected:'Device disconnected',
-    log_read:     'Read from device: spinUp={0}ms rearm={1}ms reSpin={2}ms speed={3}% volt={4}V batt={5}V',
+    log_read:     'Read from device: spinUp={0}ms spinUpRearm={1}ms reTriggerSpin={2}ms speed={3}% volt={4}V batt={5}V',
     log_read_err: 'Could not read values: ',
-    log_sent:     'Sent: spinUp={0}ms rearm={1}ms reSpin={2}ms speed={3}% volt={4}V',
+    log_sent:     'Sent: spinUp={0}ms spinUpRearm={1}ms reTriggerSpin={2}ms speed={3}% volt={4}V',
     log_battery:  'Battery voltage: {0}V',
     log_write_err:'Write error: ',
     log_conn_err: 'Connection error: ',
@@ -60,9 +60,9 @@ const STRINGS = {
     log_connecting:  'Łączę…',
     log_connected:   'Połączono z ',
     log_disconnected:'Urządzenie rozłączone',
-    log_read:     'Odczytano: spinUp={0}ms rearm={1}ms reSpin={2}ms speed={3}% volt={4}V batt={5}V',
+    log_read:     'Odczytano: spinUp={0}ms spinUpRearm={1}ms reTriggerSpin={2}ms speed={3}% volt={4}V batt={5}V',
     log_read_err: 'Nie udało się odczytać: ',
-    log_sent:     'Wysłano: spinUp={0}ms rearm={1}ms reSpin={2}ms speed={3}% volt={4}V',
+    log_sent:     'Wysłano: spinUp={0}ms spinUpRearm={1}ms reTriggerSpin={2}ms speed={3}% volt={4}V',
     log_battery:  'Napięcie baterii: {0}V',
     log_write_err:'Błąd zapisu: ',
     log_conn_err: 'Błąd połączenia: ',
@@ -95,6 +95,10 @@ function applyLang() {
     const k = el.dataset.i18n;
     if (k === 'disconnected' && bleDevice && bleDevice.gatt.connected) return;
     el.textContent = t(k);
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    const k = el.dataset.i18nTitle;
+    el.title = t(k);
   });
   document.getElementById('btn-lang').textContent = lang === 'en' ? 'PL' : 'EN';
   const ghLink = document.querySelector('.gh-link');

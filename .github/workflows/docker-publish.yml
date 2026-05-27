@@ -34,6 +34,14 @@ jobs:
             type=ref,event=branch
             type=sha
 
+      - name: Inject build info into index.html
+        run: |
+          COMMIT="${{ github.sha }}"
+          SHORT="${COMMIT:0:7}"
+          BUILD_TIME="$(date -u '+%Y-%m-%d %H:%M UTC')"
+          sed -i "s|__BUILD_COMMIT__|${SHORT}|g" web-config/src/index.html
+          sed -i "s|__BUILD_TIME__|${BUILD_TIME}|g" web-config/src/index.html
+
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
