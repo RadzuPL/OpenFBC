@@ -1,7 +1,12 @@
 # OpenNerfESC
 
-## ⚠️ UWAGA
-**TO DOPIERO SAM POCZĄTEK PROJEKTU — WIĘKSZOŚĆ TEGO, CO JEST TUTAJ AKTUALNIE STWORZONE, PRZYGOTOWAŁ COPILOT.**
+## ⚠️ Status projektu
+Projekt jest na wczesnym etapie i ciągle trwają nad nim prace.
+
+## ✅ Full release (aktualny stan)
+- Firmware kompiluje się w **Visual Studio Code + PlatformIO**.
+- Ustawienia można edytować z poziomu strony konfiguracyjnej.
+- ⚠️ **Autobuild może jeszcze nie działać poprawnie w każdym przypadku.**
 
 ## Licencja
 Projekt jest udostępniany na licencji **GNU Affero General Public License v3.0 (AGPL-3.0)**.
