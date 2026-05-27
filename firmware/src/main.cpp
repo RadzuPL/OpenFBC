@@ -11,7 +11,7 @@
 void setup() {
 #if DEBUG_MODE
   Serial.begin(115200);
-  while (!Serial) { delay(10); }
+  delay(10);
   Serial.println("[MAIN] OpenNerfESC starting (DEBUG build)");
   Serial.printf("[MAIN] Default spinUpTime : %u ms\n", (uint16_t)DEFAULT_SPIN_UP_TIME);
   Serial.printf("[MAIN] Default targetSpeed : %u %%\n", (uint8_t)DEFAULT_TARGET_SPEED);
