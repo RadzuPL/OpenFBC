@@ -17,6 +17,28 @@
       align-items: center;
       padding: 40px 20px;
     }
+    .top-controls {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 12px;
+    }
+    .lang-btn {
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      color: #8b949e;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.25rem 0.55rem;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+    }
+    .lang-btn:hover {
+      background: #30363d;
+      color: #e6edf3;
+    }
     h1 { font-size: 2rem; margin-bottom: 8px; color: #58a6ff; }
     .subtitle { color: #8b949e; margin-bottom: 8px; }
     .version-selector {
@@ -76,8 +98,8 @@
       flex-direction: column;
       gap: 16px;
     }
-    .board-card h2 { font-size: 1.2rem; color: #e6edf3; }
-    .board-card p { color: #8b949e; font-size: 0.9rem; line-height: 1.5; }
+    .board-card h2 { font-size: 1.2rem; color: #e6edf3; line-height: 1.4; }
+    .board-card p { color: #8b949e; font-size: 0.9rem; line-height: 1.5; flex: 1; }
     .board-card h2 .chip-badge {
       display: inline;
       color: #58a6ff;
@@ -87,6 +109,8 @@
     esp-web-install-button {
       --esp-tools-button-color: #238636;
       --esp-tools-button-text-color: #ffffff;
+      margin-top: auto;
+      align-self: flex-start;
     }
     esp-web-install-button[install-unsupported] {
       display: block;
@@ -120,45 +144,114 @@
   </style>
 </head>
 <body>
-  <h1>OpenNerfESC</h1>
-  <p class="subtitle">Web Flasher &mdash; Flash your ESC firmware directly from the browser via USB</p>
+  <div class="top-controls">
+    <button class="lang-btn" id="btn-lang" title="Switch language / Zmień język">PL</button>
+  </div>
+  <h1 data-i18n="title">OpenNerfESC</h1>
+  <p class="subtitle" data-i18n="subtitle">Web Flasher &mdash; Flash your ESC firmware directly from the browser via USB</p>
   <div class="version-selector">
-    <label for="version-select">Firmware version:</label>
+    <label for="version-select" data-i18n="version_label">Firmware version:</label>
     <select id="version-select">
-      <option value="">Loading&hellip;</option>
+      <option value="" data-loading="true">Loading&hellip;</option>
     </select>
-    <span id="pre-release-badge" class="pre-release-badge" style="display:none">pre-release</span>
+    <span id="pre-release-badge" class="pre-release-badge" style="display:none" data-i18n="pre_release">pre-release</span>
   </div>
 
   <div class="boards">
     <div class="board-card">
-      <h2><span class="chip-badge">ESP32-C3</span> Super Mini / Production Board</h2>
-      <p>For the ESP32-C3 Super Mini based OpenNerfESC production PCB.</p>
+      <h2><span class="chip-badge">ESP32-C3</span> <span data-i18n="board_c3_title">Super Mini / Production Board</span></h2>
+      <p data-i18n="board_c3_desc">For the ESP32-C3 Super Mini based OpenNerfESC production PCB.</p>
       <esp-web-install-button id="btn-c3" manifest="/manifests/manifest-esp32c3.json">
-        <span slot="activate" class="flash-btn">Flash ESP32-C3 Super Mini</span>
-        <span slot="unsupported">Your browser does not support WebSerial. Use Chrome or Edge.</span>
-        <span slot="not-allowed">WebSerial not allowed. Use HTTPS.</span>
+        <span slot="activate" class="flash-btn" data-i18n="flash_c3">Flash ESP32-C3 Super Mini</span>
+        <span slot="unsupported" data-i18n="unsupported">Your browser does not support WebSerial. Use Chrome or Edge.</span>
+        <span slot="not-allowed" data-i18n="not_allowed">WebSerial not allowed. Use HTTPS.</span>
       </esp-web-install-button>
     </div>
 
     <div class="board-card">
-      <h2><span class="chip-badge">ESP32-C6</span> Super Mini / Test Board</h2>
-      <p>For the ESP32-C6 Super Mini used for development and testing.</p>
+      <h2><span class="chip-badge">ESP32-C6</span> <span data-i18n="board_c6_title">Super Mini / Test Board</span></h2>
+      <p data-i18n="board_c6_desc">For the ESP32-C6 Super Mini used for development and testing.</p>
       <esp-web-install-button id="btn-c6" manifest="/manifests/manifest-esp32c6.json">
-        <span slot="activate" class="flash-btn">Flash ESP32-C6 Super Mini</span>
-        <span slot="unsupported">Your browser does not support WebSerial. Use Chrome or Edge.</span>
-        <span slot="not-allowed">WebSerial not allowed. Use HTTPS.</span>
+        <span slot="activate" class="flash-btn" data-i18n="flash_c6">Flash ESP32-C6 Super Mini</span>
+        <span slot="unsupported" data-i18n="unsupported">Your browser does not support WebSerial. Use Chrome or Edge.</span>
+        <span slot="not-allowed" data-i18n="not_allowed">WebSerial not allowed. Use HTTPS.</span>
       </esp-web-install-button>
     </div>
   </div>
 
   <footer>
-    Firmware releases on <a href="https://github.com/RadzuPL/OpenNerfESC/releases" target="_blank">GitHub Releases</a>.
-    Source code on <a href="https://github.com/RadzuPL/OpenNerfESC" target="_blank">GitHub</a>.<br>
+    <span data-i18n="footer_releases">Firmware releases on</span> <a href="https://github.com/RadzuPL/OpenNerfESC/releases" target="_blank">GitHub Releases</a>.
+    <span data-i18n="footer_source">Source code on</span> <a href="https://github.com/RadzuPL/OpenNerfESC" target="_blank">GitHub</a>.<br>
     Build: <span id="build-info">__BUILD_COMMIT__ &mdash; __BUILD_TIME__</span>
   </footer>
 
   <script>
+    const STRINGS = {
+      en: {
+        title: 'OpenNerfESC',
+        subtitle: 'Web Flasher — Flash your ESC firmware directly from the browser via USB',
+        version_label: 'Firmware version:',
+        pre_release: 'pre-release',
+        board_c3_title: 'Super Mini / Production Board',
+        board_c3_desc: 'For the ESP32-C3 Super Mini based OpenNerfESC production PCB.',
+        flash_c3: 'Flash ESP32-C3 Super Mini',
+        board_c6_title: 'Super Mini / Test Board',
+        board_c6_desc: 'For the ESP32-C6 Super Mini used for development and testing.',
+        flash_c6: 'Flash ESP32-C6 Super Mini',
+        unsupported: 'Your browser does not support WebSerial. Use Chrome or Edge.',
+        not_allowed: 'WebSerial not allowed. Use HTTPS.',
+        footer_releases: 'Firmware releases on',
+        footer_source: 'Source code on',
+        loading: 'Loading…',
+        embedded_firmware: 'embedded firmware'
+      },
+      pl: {
+        title: 'OpenNerfESC',
+        subtitle: 'Web Flasher — Wgraj firmware ESC bezpośrednio z przeglądarki przez USB',
+        version_label: 'Wersja firmware:',
+        pre_release: 'wersja testowa',
+        board_c3_title: 'Super Mini / Płytka produkcyjna',
+        board_c3_desc: 'Dla produkcyjnej płytki OpenNerfESC opartej na ESP32-C3 Super Mini.',
+        flash_c3: 'Flash ESP32-C3 Super Mini',
+        board_c6_title: 'Super Mini / Płytka testowa',
+        board_c6_desc: 'Dla ESP32-C6 Super Mini używanego do developmentu i testów.',
+        flash_c6: 'Flash ESP32-C6 Super Mini',
+        unsupported: 'Twoja przeglądarka nie obsługuje WebSerial. Użyj Chrome lub Edge.',
+        not_allowed: 'WebSerial jest zablokowany. Użyj HTTPS.',
+        footer_releases: 'Wydania firmware na',
+        footer_source: 'Kod źródłowy na',
+        loading: 'Ładowanie…',
+        embedded_firmware: 'wbudowany firmware'
+      }
+    };
+
+    let lang = (navigator.language || 'en').startsWith('pl') ? 'pl' : 'en';
+    let embeddedVersion = '';
+
+    function t(key) {
+      return STRINGS[lang][key] || STRINGS.en[key] || key;
+    }
+
+    function applyLang() {
+      document.documentElement.lang = lang;
+      document.querySelectorAll('[data-i18n]').forEach((el) => {
+        el.textContent = t(el.dataset.i18n);
+      });
+      document.querySelectorAll('[data-i18n-title]').forEach((el) => {
+        el.title = t(el.dataset.i18nTitle);
+      });
+      document.getElementById('btn-lang').textContent = lang === 'en' ? 'PL' : 'EN';
+      const loadingOption = document.querySelector('#version-select option[data-loading]');
+      if (loadingOption) loadingOption.textContent = t('loading');
+      const embeddedOption = document.querySelector('#version-select option[value="embedded"]');
+      if (embeddedOption && !embeddedVersion) embeddedOption.textContent = t('embedded_firmware');
+    }
+
+    document.getElementById('btn-lang').addEventListener('click', () => {
+      lang = lang === 'en' ? 'pl' : 'en';
+      applyLang();
+    });
+
     async function init() {
       const select = document.getElementById('version-select');
       const badge = document.getElementById('pre-release-badge');
@@ -167,13 +260,16 @@
 
       const opt = document.createElement('option');
       opt.value = 'embedded';
-      opt.textContent = 'embedded firmware';
+      opt.textContent = t('embedded_firmware');
 
       try {
         const res = await fetch('/firmware/version.txt', { cache: 'no-store' });
         if (res.ok) {
           const version = (await res.text()).trim();
-          if (version) opt.textContent = version;
+          if (version) {
+            embeddedVersion = version;
+            opt.textContent = version;
+          }
         }
       } catch {
         // Keep fallback label when version file is not available.
@@ -183,6 +279,7 @@
       select.disabled = true;
     }
 
+    applyLang();
     init();
   </script>
 </body>

@@ -20,7 +20,12 @@ const STRINGS = {
     btn_connect_active: 'Disconnect',
     btn_send:     'Send parameters',
     btn_read_battery: 'Read battery voltage',
-    github_link:  'GitHub project',
+    tip_spin: 'How long full-power spin-up lasts after trigger press.',
+    tip_rearm: 'How long trigger must stay released to re-arm full spin-up.',
+    tip_retrigger_spin: 'Short spin-up added on quick re-trigger before re-arm time passes.',
+    tip_speed: 'Target cruise speed used after spin-up completes.',
+    tip_volt: 'Battery safety threshold; ESC blocks operation below this voltage.',
+    tip_battery: 'Current measured battery voltage from ESC (read-only).',
     log_searching:   'Searching…',
     log_connecting:  'Connecting…',
     log_connected:   'Connected to ',
@@ -55,7 +60,12 @@ const STRINGS = {
     btn_connect_active: 'Rozłącz',
     btn_send:     'Wyślij parametry',
     btn_read_battery: 'Odczytaj napięcie baterii',
-    github_link:  'Projekt na GitHub',
+    tip_spin: 'Jak długo trwa pełny rozpęd po naciśnięciu spustu.',
+    tip_rearm: 'Ile czasu spust musi być puszczony, aby wrócił pełny SpinUp.',
+    tip_retrigger_spin: 'Krótki SpinUp przy szybkim ponownym naciśnięciu przed upływem rearm.',
+    tip_speed: 'Docelowa prędkość pracy po zakończeniu fazy SpinUp.',
+    tip_volt: 'Próg bezpieczeństwa baterii; ESC blokuje pracę poniżej tej wartości.',
+    tip_battery: 'Aktualnie zmierzone napięcie baterii z ESC (tylko odczyt).',
     log_searching:   'Szukam urządzenia…',
     log_connecting:  'Łączę…',
     log_connected:   'Połączono z ',
@@ -101,8 +111,6 @@ function applyLang() {
     el.title = t(k);
   });
   document.getElementById('btn-lang').textContent = lang === 'en' ? 'PL' : 'EN';
-  const ghLink = document.querySelector('.gh-link');
-  if (ghLink) ghLink.title = t('github_link');
   // Update connect button text based on state
   const bc = document.getElementById('btn-connect');
   if (bleDevice && bleDevice.gatt.connected) {
