@@ -41,7 +41,7 @@
 // --- Parameter defaults ---
 #define DEFAULT_SPIN_UP_TIME  200u   // ms  - Spin-Up phase duration (100% PWM)
 #define DEFAULT_TARGET_SPEED   75u   // %   - PWM duty cycle in Cruise phase
-#define DEFAULT_MIN_VOLTAGE  11.1f   // V   - LiPo 3S cutoff
+#define DEFAULT_MIN_VOLTAGE  11.1f   // V   - LiPo 3S cutoff (3.7V/cell * 3)
 #define DEFAULT_SPIN_UP_REARM_TIME 3000u // ms - minimum trigger release time before main spin-up can arm again
 #define DEFAULT_RETRIGGER_SPIN_UP_TIME 50u // ms - short spin-up duration for quick re-trigger
 
@@ -62,9 +62,13 @@
 #define TARGET_SPEED_MIN  0u
 #define TARGET_SPEED_MAX  100u
 
-// minVoltage: 3.0 - 15.0 V  (supports 1S-4S LiPo)
+// minVoltage: 3.0 - 15.0 V  (supports 1S-4S LiPo; 4S max = 16.8V but cutoff ~12V)
 #define MIN_VOLTAGE_MIN  3.0f
 #define MIN_VOLTAGE_MAX  15.0f
 
 // ADC voltage conversion: battery voltage = ADC pin voltage * divider ratio.
-#define BATTERY_DIVIDER_RATIO 4.0f
+// Divider: R1=300kΩ, R2=51kΩ -> ratio = (300+51)/51 = 6.882
+// At 16.8V (4S full): ADC pin = 2.44V (safe for ESP32-C3/C6 <2.5V limit and S3 <3.1V)
+// At 12.6V (3S full): ADC pin = 1.83V
+// Requires 100nF cap across R2 as charge-bucket for ADC sample-hold.
+#define BATTERY_DIVIDER_RATIO 6.882f
