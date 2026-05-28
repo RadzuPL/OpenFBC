@@ -1,14 +1,14 @@
 'use strict';
 
 // =============================================================================
-// OpenNerfESC - app.js
+// OpenFBC - app.js
 // Web Bluetooth client + i18n (en/pl).
 // =============================================================================
 
 // --- i18n ---
 const STRINGS = {
   en: {
-    title:        'OpenNerfESC Configurator',
+    title:        'OpenFBC Configurator',
     disconnected: 'Disconnected',
     label_spin:   'Spin-up time',
     label_rearm:  'Spin-up rearm time',
@@ -48,7 +48,7 @@ const STRINGS = {
     status_write_err:  'Write error',
   },
   pl: {
-    title:        'OpenNerfESC Konfigurator',
+    title:        'OpenFBC Konfigurator',
     disconnected: 'Rozłączono',
     label_spin:   'Czas rozpędu',
     label_rearm:  'Czas ponownego uzbrojenia SpinUp',
@@ -111,7 +111,6 @@ function applyLang() {
     el.title = t(k);
   });
   document.getElementById('btn-lang').textContent = lang === 'en' ? 'PL' : 'EN';
-  // Update connect button text based on state
   const bc = document.getElementById('btn-connect');
   if (bleDevice && bleDevice.gatt.connected) {
     bc.textContent = t('btn_connect_active');
@@ -212,7 +211,7 @@ btnConnect.addEventListener('click', async () => {
     setStatus('status_searching');
     addLog(t('log_searching'));
     bleDevice = await navigator.bluetooth.requestDevice({
-      filters: [{ namePrefix: 'OpenNerfESC' }],
+      filters: [{ namePrefix: 'OpenFBC' }],
       optionalServices: [SERVICE_UUID]
     });
     bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
@@ -226,7 +225,6 @@ btnConnect.addEventListener('click', async () => {
     chars.targetSpeed = await service.getCharacteristic(CHAR_TARGET_SPEED);
     chars.minVoltage  = await service.getCharacteristic(CHAR_MIN_VOLTAGE);
     chars.batteryVoltage = await service.getCharacteristic(CHAR_BATTERY_VOLTAGE);
-    // Read current values
     try {
       const sv = (await chars.spinUpTime.readValue()).getUint16(0, true);
       const re = (await chars.spinUpRearmTime.readValue()).getUint16(0, true);

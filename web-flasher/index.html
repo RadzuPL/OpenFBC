@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OpenNerfESC Web Flasher</title>
+  <title>OpenFBC Web Flasher</title>
   <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -147,7 +147,7 @@
   <div class="top-controls">
     <button class="lang-btn" id="btn-lang" title="Switch language / Zmień język">PL</button>
   </div>
-  <h1 data-i18n="title">OpenNerfESC</h1>
+  <h1 data-i18n="title">OpenFBC</h1>
   <p class="subtitle" data-i18n="subtitle">Web Flasher &mdash; Flash your ESC firmware directly from the browser via USB</p>
   <div class="version-selector">
     <label for="version-select" data-i18n="version_label">Firmware version:</label>
@@ -160,7 +160,7 @@
   <div class="boards">
     <div class="board-card">
       <h2><span class="chip-badge">ESP32-C3</span> <span data-i18n="board_c3_title">Super Mini / Production Board</span></h2>
-      <p data-i18n="board_c3_desc">For the ESP32-C3 Super Mini based OpenNerfESC production PCB.</p>
+      <p data-i18n="board_c3_desc">For the ESP32-C3 Super Mini based OpenFBC production PCB.</p>
       <esp-web-install-button id="btn-c3" manifest="/manifests/manifest-esp32c3.json">
         <span slot="activate" class="flash-btn" data-i18n="flash_c3">Flash ESP32-C3 Super Mini</span>
         <span slot="unsupported" data-i18n="unsupported">Your browser does not support WebSerial. Use Chrome or Edge.</span>
@@ -180,20 +180,20 @@
   </div>
 
   <footer>
-    <span data-i18n="footer_releases">Firmware releases on</span> <a href="https://github.com/RadzuPL/OpenNerfESC/releases" target="_blank">GitHub Releases</a>.
-    <span data-i18n="footer_source">Source code on</span> <a href="https://github.com/RadzuPL/OpenNerfESC" target="_blank">GitHub</a>.<br>
+    <span data-i18n="footer_releases">Firmware releases on</span> <a href="https://github.com/RadzuPL/OpenFBC/releases" target="_blank">GitHub Releases</a>.
+    <span data-i18n="footer_source">Source code on</span> <a href="https://github.com/RadzuPL/OpenFBC" target="_blank">GitHub</a>.<br>
     Build: <span id="build-info">__BUILD_COMMIT__ &mdash; __BUILD_TIME__</span>
   </footer>
 
   <script>
     const STRINGS = {
       en: {
-        title: 'OpenNerfESC',
+        title: 'OpenFBC',
         subtitle: 'Web Flasher — Flash your ESC firmware directly from the browser via USB',
         version_label: 'Firmware version:',
         pre_release: 'pre-release',
         board_c3_title: 'Super Mini / Production Board',
-        board_c3_desc: 'For the ESP32-C3 Super Mini based OpenNerfESC production PCB.',
+        board_c3_desc: 'For the ESP32-C3 Super Mini based OpenFBC production PCB.',
         flash_c3: 'Flash ESP32-C3 Super Mini',
         board_c6_title: 'Super Mini / Test Board',
         board_c6_desc: 'For the ESP32-C6 Super Mini used for development and testing.',
@@ -206,12 +206,12 @@
         embedded_firmware: 'embedded firmware'
       },
       pl: {
-        title: 'OpenNerfESC',
+        title: 'OpenFBC',
         subtitle: 'Web Flasher — Wgraj firmware ESC bezpośrednio z przeglądarki przez USB',
         version_label: 'Wersja firmware:',
         pre_release: 'wersja testowa',
         board_c3_title: 'Super Mini / Płytka produkcyjna',
-        board_c3_desc: 'Dla produkcyjnej płytki OpenNerfESC opartej na ESP32-C3 Super Mini.',
+        board_c3_desc: 'Dla produkcyjnej płytki OpenFBC opartej na ESP32-C3 Super Mini.',
         flash_c3: 'Flash ESP32-C3 Super Mini',
         board_c6_title: 'Super Mini / Płytka testowa',
         board_c6_desc: 'Dla ESP32-C6 Super Mini używanego do developmentu i testów.',

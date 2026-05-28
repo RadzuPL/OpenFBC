@@ -1,4 +1,8 @@
-# OpenFBC (Flywheel Blaster Controller)
+# OpenFBC
+
+> **OpenFBC** — *Flywheel Blaster Controller*
+>
+> ⚠️ NERF is a registered trademark of Hasbro, Inc. This project is not affiliated with or endorsed by Hasbro, Inc.
 
 ## ⚠️ Status projektu
 Projekt jest na wczesnym etapie i ciągle trwają nad nim prace.
@@ -8,7 +12,7 @@ Projekt jest udostępniany na licencji **GNU Affero General Public License v3.0 
 Pełny tekst licencji znajduje się w pliku `/LICENSE`.
 
 ## 1. Wstęp i założenia projektu
-OpenNerfESC to otwartoźródłowy, miniaturowy i bezdźwiękowy (20kHz+) sterownik PWM do silników szczotkowych Flywheel w wyrzutniach strzałkowych. Sterowanie odbywa się z poziomu przeglądarki przez Web Bluetooth API, więc nie trzeba rozkręcać wyrzutni i kręcić potencjometrem.
+OpenFBC to otwartoźródłowy, miniaturowy i bezdźwiękowy (20kHz+) sterownik PWM do silników szczotkowych Flywheel w wyrzutniach strzałkowych. Sterowanie odbywa się z poziomu przeglądarki przez Web Bluetooth API, więc nie trzeba rozkręcać wyrzutni i kręcić potencjometrem.
 
 ## 2. Hardware (Elektronika i „Kanapka")
  - **Mózg:** TENSTAR ESP32-C3 Super Mini – https://pl.aliexpress.com/item/1005009890133886.html
@@ -98,9 +102,9 @@ Przykładowy flow wdrożenia:
 Szybki start (Docker):
 ```yaml
 services:
-  opennerfesc-web:
-    image: ghcr.io/radzupl/opennerfesc-web-config:latest
-    container_name: opennerfesc-web
+  openfbc-web:
+    image: ghcr.io/radzupl/openfbc-web-config:latest
+    container_name: openfbc-web
     restart: unless-stopped
     ports:
       - "8321:80"
@@ -112,7 +116,7 @@ Web Flasher pozwala wgrać firmware na ESP32 bezpośrednio przez przeglądarkę 
  - Publiczny flasher dostępny pod adresem: **https://flasher.radzu.net**
  - Technologia: [ESP Web Tools](https://esphome.github.io/esp-web-tools/) — ta sama biblioteka co ESPHome/Tasmota.
  - Kod strony: `web-flasher/src/index.html`, `web-flasher/manifests/manifest-esp32c3.json`, `web-flasher/manifests/manifest-esp32c6.json`.
- - Konteneryzacja: `web-flasher/Dockerfile` oparty o `nginx:alpine`, obraz: `ghcr.io/radzupl/opennerfesc-flasher:latest`.
+ - Konteneryzacja: `web-flasher/Dockerfile` oparty o `nginx:alpine`, obraz: `ghcr.io/radzupl/openfbc-flasher:latest`.
  - Automatyzacja buildu firmware: `.github/workflows/firmware-build.yml` — buduje `.bin` dla obu płytek przy push do `firmware/**` lub przy tworzeniu Release.
 
 ### Obsługiwane płytki
@@ -132,9 +136,9 @@ Web Flasher pozwala wgrać firmware na ESP32 bezpośrednio przez przeglądarkę 
 Szybki start (Docker):
 ```yaml
 services:
-  opennerfesc-flasher:
-    image: ghcr.io/radzupl/opennerfesc-flasher:latest
-    container_name: OpenNerfESC-Flasher
+  openfbc-flasher:
+    image: ghcr.io/radzupl/openfbc-flasher:latest
+    container_name: openfbc-flasher
     restart: unless-stopped
     ports:
       - "8322:8080"
@@ -181,7 +185,7 @@ services:
 ### Konteneryzacja i deployment
  - [x] Skonfigurować kontener Docker dla web-config (`nginx:alpine`).
  - [x] Zweryfikować automatyczny build/publish obrazu w GitHub Actions (tag `latest` na branchu `main`).
- - [x] Obraz publiczny dostępny na GHCR: `ghcr.io/radzupl/opennerfesc-web-config:latest`.
+ - [x] Obraz publiczny dostępny na GHCR: `ghcr.io/radzupl/openfbc-web-config:latest`.
  - [x] Strona placeholder działa i jest dostępna publicznie pod `one.radzu.net`.
  - [x] Dopiąć subdomenę do kontenera i potwierdzić dostępność po HTTPS (SSL przez Cloudflare).
  - [x] Skonfigurować kontener i subdomenę `flasher.radzu.net` dla Web Flashera.

@@ -2,8 +2,8 @@ version: '3.8'
 
 services:
   web-flasher:
-    image: ghcr.io/radzupl/opennerfesc-flasher:latest
-    container_name: opennerfesc-flasher
+    image: ghcr.io/radzupl/openfbc-flasher:latest
+    container_name: openfbc-flasher
     restart: unless-stopped
     ports:
       - "8322:8080"

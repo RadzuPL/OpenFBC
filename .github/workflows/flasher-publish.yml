@@ -34,13 +34,9 @@ jobs:
           mkdir -p web-flasher/firmware
 
           if [ "${{ github.event_name }}" = "workflow_run" ]; then
-            # Download directly from the artifacts of the triggering firmware build run.
-            # This ensures the flasher always ships the binaries that were just built,
-            # even before a GitHub Release is created.
             RUN_ID="${{ github.event.workflow_run.id }}"
             VERSION="${{ github.event.workflow_run.head_sha }}"
           else
-            # For push / workflow_dispatch: use latest successful firmware-build run.
             RUNS_JSON=$(gh api \
               "/repos/${{ github.repository }}/actions/workflows/firmware-build.yml/runs?branch=main&per_page=20")
             RUN_ID=$(echo "$RUNS_JSON" | jq -r '.workflow_runs[] | select(.conclusion == "success") | .id' | head -n 1)
@@ -63,7 +59,6 @@ jobs:
           echo "$VERSION" > web-flasher/firmware/version.txt
           echo "tag=$VERSION" >> "$GITHUB_OUTPUT"
 
-          # Patch manifest versions to match whatever was baked in.
           VERSION=$(cat web-flasher/firmware/version.txt 2>/dev/null || echo "dev")
           for F in web-flasher/manifests/manifest-esp32c3.json web-flasher/manifests/manifest-esp32c6.json; do
             jq --arg v "$VERSION" '.version = $v' "$F" > "$F.tmp" && mv "$F.tmp" "$F"
@@ -88,7 +83,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository_owner }}/opennerfesc-flasher
+          images: ghcr.io/${{ github.repository_owner }}/openfbc-flasher
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=sha,prefix=sha-
