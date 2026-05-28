@@ -1,5 +1,5 @@
 // =============================================================================
-// OpenNerfESC - main.cpp
+// OpenFBC - main.cpp
 // Entry point: Serial debug, BLE server, PWM motor control, trigger loop.
 // =============================================================================
 #include <Arduino.h>
@@ -12,7 +12,7 @@ void setup() {
 #if DEBUG_MODE
   Serial.begin(115200);
   delay(10);
-  Serial.println("[MAIN] OpenNerfESC starting (DEBUG build)");
+  Serial.println("[MAIN] OpenFBC starting (DEBUG build)");
   Serial.printf("[MAIN] Default spinUpTime : %u ms\n", (uint16_t)DEFAULT_SPIN_UP_TIME);
   Serial.printf("[MAIN] Default spinUpRearmTime : %u ms\n", (uint16_t)DEFAULT_SPIN_UP_REARM_TIME);
   Serial.printf("[MAIN] Default reTriggerSpinUpTime : %u ms\n", (uint16_t)DEFAULT_RETRIGGER_SPIN_UP_TIME);

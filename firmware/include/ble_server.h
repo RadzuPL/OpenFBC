@@ -1,7 +1,7 @@
 #pragma once
 
 // =============================================================================
-// OpenNerfESC - ble_server.h
+// OpenFBC - ble_server.h
 // BLE GATT server interface.
 // Handles advertising, connection callbacks and characteristic write callbacks.
 // =============================================================================

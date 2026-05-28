@@ -26,6 +26,6 @@
     "require_upload_port": true,
     "speed": 460800
   },
-  "url": "https://github.com/RadzuPL/OpenNerfESC",
+  "url": "https://github.com/RadzuPL/OpenFBC",
   "vendor": "Generic"
 }

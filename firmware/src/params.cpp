@@ -1,5 +1,5 @@
 // =============================================================================
-// OpenNerfESC - params.cpp
+// OpenFBC - params.cpp
 // NVS (Non-Volatile Storage) persistence for ESC parameters.
 // Provides loadParams() / saveParams() used by ble_server and main.
 // =============================================================================

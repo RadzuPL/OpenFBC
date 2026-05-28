@@ -1,5 +1,5 @@
 // =============================================================================
-// OpenNerfESC - pwm_control.cpp
+// OpenFBC - pwm_control.cpp
 // DC motor control via MOSFET (LEDC PWM) and trigger input.
 //
 // Control sequence:

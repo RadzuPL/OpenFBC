@@ -1,8 +1,8 @@
 {
-  "name": "OpenNerfESC - ESP32-C6 Super Mini",
+  "name": "OpenFBC - ESP32-C6 Super Mini",
   "version": "dev",
   "home_assistant_domain": "esphome",
-  "funding_url": "https://github.com/RadzuPL/OpenNerfESC",
+  "funding_url": "https://github.com/RadzuPL/OpenFBC",
   "new_install_prompt_erase": false,
   "builds": [
     {

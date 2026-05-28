@@ -1,5 +1,5 @@
 // =============================================================================
-// OpenNerfESC - ble_server.h
+// OpenFBC - ble_server.h
 // BLE GATT server public interface.
 // For ESC parameter variables, include params.h instead.
 // =============================================================================

@@ -1,6 +1,6 @@
-# OpenNerfESC – Coding Guidelines
+# OpenFBC – Coding Guidelines
 
-> This file defines coding conventions for the entire OpenNerfESC project.
+> This file defines coding conventions for the entire OpenFBC project.
 > All contributors (human and AI) must follow these rules.
 
 ---

@@ -1,5 +1,5 @@
 // =============================================================================
-// OpenNerfESC - config.h
+// OpenFBC - config.h
 // Central configuration: pins, BLE UUIDs, parameter defaults and ranges.
 // =============================================================================
 #pragma once
@@ -26,7 +26,7 @@
 #endif
 
 // --- BLE ---
-#define BLE_DEVICE_NAME "OpenNerfESC"
+#define BLE_DEVICE_NAME "OpenFBC"
 
 // Service and characteristic UUIDs.
 // NOTE: Replace with properly generated UUIDs before production release.
