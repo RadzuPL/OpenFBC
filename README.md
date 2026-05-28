@@ -1,8 +1,4 @@
-# OpenFBC
-
-> **OpenFBC** — *Flywheel Blaster Controller*
->
-> ⚠️ NERF is a registered trademark of Hasbro, Inc. This project is not affiliated with or endorsed by Hasbro, Inc.
+# OpenFBC - *Open Flywheel Blaster Controller*
 
 ## ⚠️ Status projektu
 Projekt jest na wczesnym etapie i ciągle trwają nad nim prace.
