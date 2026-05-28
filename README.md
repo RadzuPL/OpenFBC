@@ -11,19 +11,25 @@ Pełny tekst licencji znajduje się w pliku `/LICENSE`.
 OpenFBC to otwartoźródłowy, miniaturowy i bezdźwiękowy (20kHz+) sterownik PWM do silników szczotkowych Flywheel w wyrzutniach strzałkowych. Sterowanie odbywa się z poziomu przeglądarki przez Web Bluetooth API, więc nie trzeba rozkręcać wyrzutni i kręcić potencjometrem.
 
 ## 2. Hardware (Elektronika i „Kanapka")
- - **Mózg:** TENSTAR ESP32-C3 Super Mini – https://pl.aliexpress.com/item/1005009890133886.html
- - **Driver bramki MOSFET:** TC4420 – https://pl.aliexpress.com/item/1005011629643514.html
- - **Element wykonawczy:** N-MOSFET IRLR7843 (TO-252) – https://pl.aliexpress.com/item/1005006127790007.html
- - **Zabezpieczenia:** dioda Schottky'ego SB540 5A40V – https://pl.aliexpress.com/item/1005007048222899.html
- - **Zasilanie logiki:** Mini DC-DC 12-24V do 5V 3A – https://pl.aliexpress.com/item/1005006245122273.html
-   (na płytce prawdopodobnie MP2315 z elementami dodatkowymi; moduł będzie wylutowany i potrzebne elementy trafią na docelową płytkę)
- - **Połączenia:** XT30 i solidne ścieżki z odniesieniem do `/hardware/wiring_diagram.png` (wpięcie oryginalnego Rev Triggera jako wejście logiczne ESP32).
- - **Silniki:** dwa szczotkowe silniki DC połączone równolegle, sterowane jednym kanałem PWM (jeden pin ESP32 → jeden MOSFET).
 
-Struktura folderu sprzętowego:
- - `/hardware/gerbers` – paczki produkcyjne PCB (ZIP do JLCPCB).
- - `/hardware/schematics` – zrzuty schematów z EasyEDA.
- - `/hardware/wiring_diagram.png` – diagram połączeń całej instalacji.
+Sterownik składa się z **ESP32-C3 Super Mini** zamontowanego w konfiguracji kanapki na dedykowanej płytce nośnej **PowerBoard v1** poprzez goldpiny 2.54 mm.
+
+**Szczegółowa dokumentacja sprzętowa (schemat, BOM, pliki Gerber, zdjęcia PCB):**
+👉 [`/hardware/README.md`](hardware/README.md)
+
+### Kluczowe komponenty
+
+| Element | Opis |
+|---|---|
+| ESP32-C3 Super Mini | Mikrokontroler — mózg systemu |
+| PowerBoard v1 | Własna płytka PCB — przetwornica 5V, driver bramki, MOSFET, pomiar napięcia |
+| IRLR7843 (TO-252) | N-MOSFET; przełącza masę silników przez PWM |
+| TC4420 | Driver bramki MOSFET |
+| MP2315 | Przetwornica buck 3A — zasila logikę z napięcia baterii LiPo |
+
+- **Silniki:** dwa szczotkowe silniki DC połączone równolegle, sterowane jednym kanałem PWM.
+- **Zasilanie:** LiPo 3S (domyślnie) lub 4S. Połączenia lutowane bezpośrednio do padów PCB.
+- **Spust:** oryginalny Rev Trigger wyrzutni podłączony jako wejście logiczne (zwarcie do GND).
 
 ## 3. Logika sterowania silnikami
 
@@ -147,12 +153,10 @@ services:
 ## 8. TODO (z podziałem na obszary projektu)
 
 ### Hardware / elektronika
- - [ ] Dokończyć i zweryfikować pełny schemat elektryczny.
- - [ ] Narysować finalne PCB pod docelowe elementy (w tym elementy z modułu MP2315) – IRLR7843 + TC4420 + SB540 + zasilacz 5V.
- - [ ] Wykonać ERC/DRC i przegląd obciążalności ścieżek mocy.
- - [ ] Zamówić IRLR7843 (oczekiwanie na dostawę) i prototypowe płytki PCB.
- - [ ] Zlutować i uruchomić pierwsze prototypy.
+ - [ ] Podmienić schemat na wyższą rozdzielczość (`hardware/SCH_Shematic.png`).
+ - [ ] Zlutować i uruchomić pierwsze prototypy PowerBoard v1.
  - [ ] Zweryfikować termikę i stabilność sekcji mocy pod obciążeniem.
+ - [ ] Wykonać ERC/DRC końcowy przed zamówieniem serii.
 
 ### Firmware (ESP32-C3)
  - [ ] Implementacja odczytu ADC napięcia i blokady przy `minVoltage`.
