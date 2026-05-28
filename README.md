@@ -1,4 +1,4 @@
-# OpenNerfESC
+# OpenFBC (Flywheel Blaster Controller)
 
 ## ⚠️ Status projektu
 Projekt jest na wczesnym etapie i ciągle trwają nad nim prace.
