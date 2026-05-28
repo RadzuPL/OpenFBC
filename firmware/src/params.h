@@ -1,5 +1,5 @@
 // =============================================================================
-// OpenNerfESC - params.h
+// OpenFBC - params.h
 // Shared ESC parameters: runtime variables + NVS persist/load API.
 // Include this in any module that reads or writes ESC parameters.
 // =============================================================================

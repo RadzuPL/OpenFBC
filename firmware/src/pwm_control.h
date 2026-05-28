@@ -1,7 +1,7 @@
 #pragma once
 
 // =============================================================================
-// OpenNerfESC - pwm_control.h
+// OpenFBC - pwm_control.h
 // DC motor control: LEDC PWM (single channel) + trigger input + spin-up/down.
 // =============================================================================
 

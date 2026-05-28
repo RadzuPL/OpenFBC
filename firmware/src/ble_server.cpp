@@ -1,5 +1,5 @@
 // =============================================================================
-// OpenNerfESC - ble_server.cpp
+// OpenFBC - ble_server.cpp
 // BLE GATT server - NimBLE-Arduino 2.x.
 // Exposes spinUpTime, spinUpRearmTime, reTriggerSpinUpTime, targetSpeed,
 // minVoltage as readable/writable and batteryVoltage as read-only.
