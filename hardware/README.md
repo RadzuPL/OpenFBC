@@ -1,108 +1,225 @@
-# OpenFBC PowerBoard v1 — Hardware Documentation
+# OpenFBC PowerBoard v1 — Dokumentacja sprzętowa / Hardware Documentation
 
-> **Status:** Prototype v1 — PCB files ready for ordering, first batch not yet assembled.
+## Szybka nawigacja / Quick Navigation
+
+### PL
+- [Opis](#opis)
+- [Bloki funkcjonalne](#bloki-funkcjonalne)
+- [Schemat](#schemat)
+- [Diagram połączeń](#diagram-połączeń)
+- [Pliki produkcyjne](#pliki-produkcyjne)
+- [Lista elementów (BOM)](#lista-elementów-bom)
+- [Wizualizacje PCB](#wizualizacje-pcb)
+- [Uwagi montażowe](#uwagi-montażowe)
+
+### EN
+- [Overview](#overview)
+- [Functional Blocks](#functional-blocks)
+- [Schematic](#schematic)
+- [Wiring Diagram](#wiring-diagram)
+- [Production Files](#production-files)
+- [Bill of Materials (BOM)](#bill-of-materials-bom)
+- [PCB Visualisations](#pcb-visualisations)
+- [Assembly Notes](#assembly-notes)
+
+---
+
+# PL
+
+## Opis
+
+PowerBoard v1 to kompaktowa płytka rozszerzająca zaprojektowana do współpracy z modułem **ESP32-C3 Super Mini**, montowanym za pomocą goldpinów 2.54 mm. Całość tworzy zwartą konstrukcję o obrysie zbliżonym do samego modułu ESP32, dzięki czemu układ można łatwo zintegrować w ograniczonej przestrzeni obudowy.
+
+Aby ograniczyć wymiary, elementy zostały rozmieszczone po **obu stronach PCB**. Płytka integruje sekcję zasilania 5 V, układ sterowania silnikami szczotkowymi przez PWM, wejście spustu oraz tor pomiaru napięcia pakietu LiPo.
+
+Założony zakres zasilania to **LiPo 2S–4S**, przy czym domyślna konfiguracja firmware zakłada pakiet 3S.
+
+## Bloki funkcjonalne
+
+| Blok | Główne elementy | Opis |
+|---|---|---|
+| Przetwornica 5 V | MP2315, L1, R1–R9, C1, C2, C4, C5, C11, C12 | Obniżenie napięcia pakietu LiPo do 5 V dla zasilania modułu ESP32 i drivera bramki |
+| Driver bramki MOSFET | TC4420, R11, R12 | Szybkie sterowanie bramką tranzystora mocy przy pracy PWM |
+| Stopień mocy silników | IRLR7843 | Tranzystor N-MOSFET przełączający masę dwóch silników połączonych równolegle |
+| Pomiar napięcia baterii | R21, R22, C13 | Dzielnik rezystorowy z kondensatorem filtrującym do pomiaru napięcia pakietu przez ADC |
+| Wejście spustu | Pad lutowniczy | Wejście aktywowane zwarciem do masy, przeznaczone do podłączenia przewodu od spustu |
+
+### Tor pomiaru napięcia baterii
+
+Dzielnik został dobrany tak, aby był bezpieczny i kompatybilny z układami **ESP32-C3**, **ESP32-C6** oraz **ESP32-S3**:
+
+- **R21 = 300 kΩ**
+- **R22 = 51 kΩ**
+- **C13 = 100 nF**
+- Współczynnik dzielnika: `(300 + 51) / 51 = 6.882`
+- Napięcie na wejściu ADC przy **4S pełne (16.8 V):** około **2.44 V**
+- Napięcie na wejściu ADC przy **3S pełne (12.6 V):** około **1.83 V**
+- Stała firmware: `BATTERY_DIVIDER_RATIO 6.882f`
+
+## Schemat
+
+![Schemat PowerBoard v1](SCH_Shematic.png)
+
+## Diagram połączeń
+
+![Diagram połączeń PowerBoard v1](wiring_diagram.png)
+
+## Pliki produkcyjne
+
+| Plik | Opis |
+|---|---|
+| [`Gerber_PCB1_2026-05-28.zip`](Gerber_PCB1_2026-05-28.zip) | Paczka Gerber gotowa do bezpośredniego złożenia zamówienia na PCB |
+
+Domyślne parametry zamówienia dla typowych fabryk PCB: 2 warstwy, FR4 1.6 mm, HASL, standardowa maska lutownicza.
+
+## Lista elementów (BOM)
+
+Wszystkie elementy SMD mają obudowę **0805**, chyba że wskazano inaczej.
+
+| Ref | Wartość | Opis | Obudowa | Ilość |
+|---|---|---|---|---|
+| C1, C2 | 22 µF | Kondensatory filtrujące przetwornicy | C1210 | 2 |
+| C4, C5, C11, C13 | 100 nF | Kondensatory odsprzęgające / filtr ADC | C0805 | 4 |
+| C12 | 1 µF | Kondensator pomocniczy | C0805 | 1 |
+| L1 | 4.7 µH | Dławik przetwornicy buck | IND 11.6×10.1 mm | 1 |
+| R1 | 40.2 kΩ | Sieć sprzężenia zwrotnego przetwornicy | R0805 | 1 |
+| R2 | 7.5 kΩ | Sieć sprzężenia zwrotnego przetwornicy | R0805 | 1 |
+| R4 | 75 kΩ | Element pomocniczy przetwornicy | R0805 | 1 |
+| R5 | 20 Ω | Element pomocniczy przetwornicy | R0805 | 1 |
+| R6 | 200 kΩ | Element pomocniczy przetwornicy | R0805 | 1 |
+| R9 | 20 kΩ | Element pomocniczy przetwornicy | R0805 | 1 |
+| R11 | 10 Ω | Rezystor szeregowy bramki MOSFET | R0805 | 1 |
+| R12 | 100 kΩ | Rezystor pull-down bramki MOSFET | R0805 | 1 |
+| R21 | 300 kΩ | Górny rezystor dzielnika napięcia baterii | R0805 | 1 |
+| R22 | 51 kΩ | Dolny rezystor dzielnika napięcia baterii | R0805 | 1 |
+| Q1 | IRLR7843 | Tranzystor N-MOSFET mocy | TO-252-2 | 1 |
+| U1 | TC4420 | Driver bramki MOSFET | SOP-8 | 1 |
+| U2 | MP2315 | Synchroniczna przetwornica buck 3 A | TSOT23-8 | 1 |
+| MCU1 | ESP32-C3 Super Mini | Moduł mikrokontrolera, montowany na goldpinach | ESP32-C3 SM | 1 |
+
+**Uwagi:**
+- Goldpiny 2.54 mm nie są ujęte w BOM — zwykle są dołączane do modułu ESP32-C3 Super Mini.
+- Połączenia zasilania, silników i spustu są realizowane przez bezpośrednie przylutowanie przewodów do padów PCB.
+- Dodatkowe elementy mechaniczne i złącza nie są przewidziane w projekcie, aby utrzymać możliwie małe wymiary płytki.
+
+## Wizualizacje PCB
+
+### Widok 3D
+
+![Widok 3D PCB 1](3D_PCB.png)
+![Widok 3D PCB 2](3D_PCB_2.png)
+
+### Widok 2D
+
+| Top | Bottom |
+|:---:|:---:|
+| ![Top side](2D_PCB_Top.png) | ![Bottom side](2D_PCB_Bottom.png) |
+
+## Uwagi montażowe
+
+- Zalecane jest rozpoczęcie montażu od elementów SMD po stronie dolnej, a następnie po stronie górnej.
+- Moduł **ESP32-C3 Super Mini** nie jest lutowany bezpośrednio do płytki — jest osadzany na goldpinach 2.54 mm.
+- Przewody zasilania, silników oraz spustu należy lutować bezpośrednio do odpowiednich padów na PCB.
+- Wejście spustu jest aktywne po zwarciu do GND.
+- Po zakończeniu montażu należy zweryfikować obecność stabilnego napięcia 5 V przed osadzeniem modułu ESP32.
+
+---
+
+# EN
 
 ## Overview
 
-PowerBoard v1 is a compact carrier board designed to mount directly under an **ESP32-C3 Super Mini** in a sandwich configuration via 2.54 mm pin headers. The board footprint matches the ESP32-C3 Super Mini outline, keeping the total assembly as small as possible. Components are populated on **both sides** of the PCB to achieve this.
+PowerBoard v1 is a compact expansion board designed to work with the **ESP32-C3 Super Mini**, mounted using standard 2.54 mm pin headers. The assembly forms a compact stack with an outline close to the ESP32 module itself, making it suitable for installations with limited internal space.
 
-The board provides all power and signal conditioning needed to drive two parallel brushed DC flywheel motors from a LiPo battery pack (3S default, 4S compatible).
+To minimise the overall footprint, components are placed on **both sides of the PCB**. The board integrates a 5 V power supply stage, PWM motor control circuitry, trigger input and LiPo battery voltage sensing.
 
----
+The intended supply range is **LiPo 2S–4S**, while the default firmware configuration assumes a 3S pack.
 
 ## Functional Blocks
 
-| Block | Key Component | Description |
+| Block | Main Components | Description |
 |---|---|---|
-| **5 V Buck Regulator** | MP2315 | Steps down battery voltage (8–24 V) to 5 V for ESP32 and gate driver supply |
-| **Gate Driver** | TC4420 | Drives the N-MOSFET gate with fast charge/discharge for clean PWM switching |
-| **Motor Switch** | IRLR7843 (TO-252) | N-channel power MOSFET; switches common GND of both motors via PWM |
-| **Battery Voltage Monitor** | R21, R22, C13 | Resistive divider + filter cap feeds battery voltage to ESP32 ADC (GPIO 1) |
-| **Trigger Input** | Solder pad | Direct wire-solder pad; connects to original blaster Rev trigger (short to GND = active) |
+| 5 V Buck Regulator | MP2315, L1, R1–R9, C1, C2, C4, C5, C11, C12 | Steps LiPo battery voltage down to 5 V for ESP32 and gate driver supply |
+| MOSFET Gate Driver | TC4420, R11, R12 | Provides fast gate drive for PWM operation |
+| Motor Power Stage | IRLR7843 | N-channel MOSFET switching the low side of two motors connected in parallel |
+| Battery Voltage Measurement | R21, R22, C13 | Resistive divider with filter capacitor for ADC battery monitoring |
+| Trigger Input | Solder pad | Active-low input intended for direct wiring to the trigger circuit |
 
-### Voltage Divider (Battery Monitor)
+### Battery Voltage Sensing
 
-Divider values chosen for compatibility with ESP32-C3, C6 and S3 (ADC safe range ≤ 2.5 V for C3/C6):
+The divider was selected to ensure safe operation and compatibility with **ESP32-C3**, **ESP32-C6** and **ESP32-S3** devices:
 
-- **R21 = 300 kΩ**, **R22 = 51 kΩ**, **C13 = 100 nF** (charge-bucket across R22)
-- Ratio: `(300 + 51) / 51 = 6.882`
-- ADC pin voltage at **4S full (16.8 V):** ~2.44 V ✅
-- ADC pin voltage at **3S full (12.6 V):** ~1.83 V ✅
-- Firmware constant: `BATTERY_DIVIDER_RATIO 6.882f` (see `firmware/include/config.h`)
+- **R21 = 300 kΩ**
+- **R22 = 51 kΩ**
+- **C13 = 100 nF**
+- Divider ratio: `(300 + 51) / 51 = 6.882`
+- ADC input voltage at **4S full charge (16.8 V):** approximately **2.44 V**
+- ADC input voltage at **3S full charge (12.6 V):** approximately **1.83 V**
+- Firmware constant: `BATTERY_DIVIDER_RATIO 6.882f`
 
----
+## Schematic
 
-## PCB Images
+![PowerBoard v1 schematic](SCH_Shematic.png)
 
-### 3D Render
+## Wiring Diagram
 
-![3D PCB view 1](3D_PCB.png)
-![3D PCB view 2](3D_PCB_2.png)
-
-### 2D Layout
-
-| Top Side | Bottom Side |
-|:---:|:---:|
-| ![Top](2D_PCB_Top.png) | ![Bottom](2D_PCB_Bottom.png) |
-
-### Schematic
-
-![Schematic](SCH_Shematic.png)
-
-> ⚠️ Low-resolution placeholder — will be replaced with a higher-resolution export.
-
-### Wiring Diagram
-
-![Wiring diagram](wiring_diagram.png)
-
----
+![PowerBoard v1 wiring diagram](wiring_diagram.png)
 
 ## Production Files
 
 | File | Description |
 |---|---|
-| [`Gerber_PCB1_2026-05-28.zip`](Gerber_PCB1_2026-05-28.zip) | Gerber package — ready to upload to JLCPCB / PCBWay / similar |
+| [`Gerber_PCB1_2026-05-28.zip`](Gerber_PCB1_2026-05-28.zip) | Gerber package ready for direct PCB ordering |
 
-> Default fab settings (JLCPCB): 2-layer, 1.6 mm FR4, HASL, green soldermask — no special settings required.
-
----
+Recommended default order parameters for standard PCB manufacturers: 2 layers, 1.6 mm FR4, HASL, standard soldermask.
 
 ## Bill of Materials (BOM)
 
-All SMD components are **0805** package unless stated otherwise. LCSC part numbers provided for convenient ordering.
+All SMD components use **0805** packages unless otherwise noted.
 
-| Ref | Value | Description | Package | Qty | LCSC |
-|---|---|---|---|---|---|
-| C1, C2 | 22 µF | Bulk capacitor (buck regulator) | C1210 | 2 | [C21397](https://www.lcsc.com/product-detail/C21397.html) |
-| C4, C5, C11, C13 | 100 nF | Bypass / ADC charge-bucket cap | C0805 | 4 | [C16780](https://www.lcsc.com/product-detail/C16780.html) |
-| C12 | 1 µF | Bypass capacitor | C0805 | 1 | [C28323](https://www.lcsc.com/product-detail/C28323.html) |
-| L1 | 4.7 µH | Buck inductor | IND 11.6×10.1 mm | 1 | [C6364675](https://www.lcsc.com/product-detail/C6364675.html) |
-| R1 | 40.2 kΩ | Buck regulator feedback network | R0805 | 1 | [C2933438](https://www.lcsc.com/product-detail/C2933438.html) |
-| R2 | 7.5 kΩ | Buck regulator feedback network | R0805 | 1 | [C2930310](https://www.lcsc.com/product-detail/C2930310.html) |
-| R4 | 75 kΩ | Buck regulator support network | R0805 | 1 | [C17819](https://www.lcsc.com/product-detail/C17819.html) |
-| R5 | 20 Ω | Buck regulator support network | R0805 | 1 | [C2907241](https://www.lcsc.com/product-detail/C2907241.html) |
-| R6 | 200 kΩ | Buck regulator support network | R0805 | 1 | [C2907238](https://www.lcsc.com/product-detail/C2907238.html) |
-| R9 | 20 kΩ | Buck regulator support network | R0805 | 1 | [C4328](https://www.lcsc.com/product-detail/C4328.html) |
-| R11 | 10 Ω | Gate series resistor (MOSFET) | R0805 | 1 | [C17415](https://www.lcsc.com/product-detail/C17415.html) |
-| R12 | 100 kΩ | Gate pull-down resistor (MOSFET) | R0805 | 1 | [C149504](https://www.lcsc.com/product-detail/C149504.html) |
-| R21 | 300 kΩ | Battery voltage divider (top) | R0805 | 1 | [C104213](https://www.lcsc.com/product-detail/C104213.html) |
-| R22 | 51 kΩ | Battery voltage divider (bottom) | R0805 | 1 | [C2930300](https://www.lcsc.com/product-detail/C2930300.html) |
-| Q1 | IRLR7843 | N-channel power MOSFET | TO-252-2 | 1 | [C21988](https://www.lcsc.com/product-detail/C21988.html) |
-| U1 | TC4420 | MOSFET gate driver | SOP-8 | 1 | [C231865](https://www.lcsc.com/product-detail/C231865.html) |
-| U2 | MP2315 | 3 A synchronous buck regulator | TSOT23-8 | 1 | *(see note)* |
-| MCU1 | ESP32-C3 Super Mini | Microcontroller (not on PCB BOM) | Via pin headers | 1 | — |
+| Ref | Value | Description | Package | Qty |
+|---|---|---|---|---|
+| C1, C2 | 22 µF | Buck regulator filtering capacitors | C1210 | 2 |
+| C4, C5, C11, C13 | 100 nF | Decoupling / ADC filter capacitors | C0805 | 4 |
+| C12 | 1 µF | Auxiliary capacitor | C0805 | 1 |
+| L1 | 4.7 µH | Buck regulator inductor | IND 11.6×10.1 mm | 1 |
+| R1 | 40.2 kΩ | Buck regulator feedback network | R0805 | 1 |
+| R2 | 7.5 kΩ | Buck regulator feedback network | R0805 | 1 |
+| R4 | 75 kΩ | Buck regulator support component | R0805 | 1 |
+| R5 | 20 Ω | Buck regulator support component | R0805 | 1 |
+| R6 | 200 kΩ | Buck regulator support component | R0805 | 1 |
+| R9 | 20 kΩ | Buck regulator support component | R0805 | 1 |
+| R11 | 10 Ω | MOSFET gate series resistor | R0805 | 1 |
+| R12 | 100 kΩ | MOSFET gate pull-down resistor | R0805 | 1 |
+| R21 | 300 kΩ | Upper resistor of battery divider | R0805 | 1 |
+| R22 | 51 kΩ | Lower resistor of battery divider | R0805 | 1 |
+| Q1 | IRLR7843 | Power N-MOSFET | TO-252-2 | 1 |
+| U1 | TC4420 | MOSFET gate driver | SOP-8 | 1 |
+| U2 | MP2315 | 3 A synchronous buck regulator | TSOT23-8 | 1 |
+| MCU1 | ESP32-C3 Super Mini | Microcontroller module mounted via pin headers | ESP32-C3 SM | 1 |
 
-> **MP2315 note:** Not available on LCSC; source from AliExpress or local distributor. Search: *MP2315 TSOT23-8*.
+**Notes:**
+- 2.54 mm pin headers are not included in the BOM; they are typically supplied with the ESP32-C3 Super Mini module.
+- Power, motor and trigger connections are made by soldering wires directly to PCB pads.
+- No additional mechanical parts or connectors are included in the design in order to keep the PCB as compact as possible.
 
-> **Pin headers / connectors:** Not included in BOM. 2.54 mm pin headers typically come bundled with the ESP32-C3 Super Mini. All other connections (battery, motors, trigger) are direct solder pads — no connectors by design, to minimise board size.
+## PCB Visualisations
 
----
+### 3D View
+
+![3D PCB view 1](3D_PCB.png)
+![3D PCB view 2](3D_PCB_2.png)
+
+### 2D View
+
+| Top | Bottom |
+|:---:|:---:|
+| ![Top side](2D_PCB_Top.png) | ![Bottom side](2D_PCB_Bottom.png) |
 
 ## Assembly Notes
 
-- Solder **bottom-side** SMD components first (reflow or hot air), then top-side.
-- The ESP32-C3 Super Mini is **not** soldered directly — it plugs in via 2.54 mm pin headers, allowing replacement without rework.
-- **Trigger pad:** Solder a two-wire cable directly to the pad. Shorting this pad to GND activates the trigger (active LOW, GPIO 4 on ESP32, internal pull-up enabled in firmware).
-- **Motor pads:** Solder motor wires directly to the board. Both motors are wired in parallel to a single MOSFET drain pad.
-- **Battery input:** Solder battery leads directly to the BAT+/BAT− pads. Polarity is marked on silkscreen.
-- After assembly, verify 5 V rail with a multimeter before plugging in the ESP32.
+- It is recommended to assemble the bottom-side SMD components first, followed by the top side.
+- The **ESP32-C3 Super Mini** is not soldered directly to the board; it is installed using 2.54 mm pin headers.
+- Power, motor and trigger wires should be soldered directly to the corresponding PCB pads.
+- The trigger input is active when shorted to GND.
+- After assembly, verify a stable 5 V rail before installing the ESP32 module.

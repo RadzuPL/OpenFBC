@@ -10,26 +10,26 @@ Pełny tekst licencji znajduje się w pliku `/LICENSE`.
 ## 1. Wstęp i założenia projektu
 OpenFBC to otwartoźródłowy, miniaturowy i bezdźwiękowy (20kHz+) sterownik PWM do silników szczotkowych Flywheel w wyrzutniach strzałkowych. Sterowanie odbywa się z poziomu przeglądarki przez Web Bluetooth API, więc nie trzeba rozkręcać wyrzutni i kręcić potencjometrem.
 
-## 2. Hardware (Elektronika i „Kanapka")
+## 2. Hardware
 
-Sterownik składa się z **ESP32-C3 Super Mini** zamontowanego w konfiguracji kanapki na dedykowanej płytce nośnej **PowerBoard v1** poprzez goldpiny 2.54 mm.
+Warstwa sprzętowa systemu składa się z modułu **ESP32-C3 Super Mini** oraz dedykowanej płytki rozszerzającej **PowerBoard v1**, połączonych za pomocą goldpinów 2.54 mm. Płytka PowerBoard v1 integruje sekcję zasilania 5 V, układ sterowania MOSFET-em, tor pomiaru napięcia akumulatora oraz punkty lutownicze do bezpośredniego podłączenia przewodów zasilania, silników i spustu.
 
-**Szczegółowa dokumentacja sprzętowa (schemat, BOM, pliki Gerber, zdjęcia PCB):**
+**Szczegółowa dokumentacja sprzętowa (schemat, diagram połączeń, BOM, pliki Gerber, wizualizacje PCB):**
 👉 [`/hardware/README.md`](hardware/README.md)
 
 ### Kluczowe komponenty
 
 | Element | Opis |
 |---|---|
-| ESP32-C3 Super Mini | Mikrokontroler — mózg systemu |
-| PowerBoard v1 | Własna płytka PCB — przetwornica 5V, driver bramki, MOSFET, pomiar napięcia |
-| IRLR7843 (TO-252) | N-MOSFET; przełącza masę silników przez PWM |
-| TC4420 | Driver bramki MOSFET |
-| MP2315 | Przetwornica buck 3A — zasila logikę z napięcia baterii LiPo |
+| ESP32-C3 Super Mini | Mikrokontroler pełniący rolę jednostki sterującej |
+| PowerBoard v1 | Dedykowana płytka PCB integrująca zasilanie, sterowanie silnikami i pomiar napięcia |
+| IRLR7843 (TO-252) | Tranzystor N-MOSFET przełączający masę silników metodą PWM |
+| TC4420 | Driver bramki MOSFET zapewniający szybkie przełączanie tranzystora |
+| MP2315 | Przetwornica buck 5 V zasilająca logikę z pakietu LiPo |
 
-- **Silniki:** dwa szczotkowe silniki DC połączone równolegle, sterowane jednym kanałem PWM.
-- **Zasilanie:** LiPo 3S (domyślnie) lub 4S. Połączenia lutowane bezpośrednio do padów PCB.
-- **Spust:** oryginalny Rev Trigger wyrzutni podłączony jako wejście logiczne (zwarcie do GND).
+- **Silniki:** dwa szczotkowe silniki DC połączone równolegle i sterowane wspólnym kanałem PWM.
+- **Zasilanie:** pakiet LiPo 2S–4S, przy czym domyślne parametry firmware zakładają konfigurację 3S.
+- **Spust:** wejście logiczne aktywowane przez zwarcie do GND, przeznaczone do podłączenia oryginalnego Rev Triggera.
 
 ## 3. Logika sterowania silnikami
 
@@ -153,7 +153,6 @@ services:
 ## 8. TODO (z podziałem na obszary projektu)
 
 ### Hardware / elektronika
- - [ ] Podmienić schemat na wyższą rozdzielczość (`hardware/SCH_Shematic.png`).
  - [ ] Zlutować i uruchomić pierwsze prototypy PowerBoard v1.
  - [ ] Zweryfikować termikę i stabilność sekcji mocy pod obciążeniem.
  - [ ] Wykonać ERC/DRC końcowy przed zamówieniem serii.
