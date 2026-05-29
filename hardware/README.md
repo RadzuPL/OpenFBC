@@ -4,6 +4,7 @@
 
 ### PL
 - [Opis](#opis)
+- [Projekt na OSHWLab](#projekt-na-oshwlab)
 - [Bloki funkcjonalne](#bloki-funkcjonalne)
 - [Schemat](#schemat)
 - [Diagram połączeń](#diagram-połączeń)
@@ -14,6 +15,7 @@
 
 ### EN
 - [Overview](#overview)
+- [OSHWLab Project](#oshwlab-project)
 - [Functional Blocks](#functional-blocks)
 - [Schematic](#schematic)
 - [Wiring Diagram](#wiring-diagram)
@@ -33,6 +35,17 @@ PowerBoard v1 to kompaktowa płytka rozszerzająca zaprojektowana do współprac
 Aby ograniczyć wymiary, elementy zostały rozmieszczone po **obu stronach PCB**. Płytka integruje sekcję zasilania 5 V, układ sterowania silnikami szczotkowymi przez PWM, wejście spustu oraz tor pomiaru napięcia pakietu LiPo.
 
 Założony zakres zasilania to **LiPo 2S–4S**, przy czym domyślna konfiguracja firmware zakłada pakiet 3S.
+
+## Projekt na OSHWLab
+
+Cały projekt elektryczny (schemat, PCB, BOM) jest publicznie dostępny na platformie **OSHWLab / EasyEDA Pro**:
+
+👉 **[oshwlab.com/djradzu/project_bhmgaymt](https://oshwlab.com/djradzu/project_bhmgaymt)**
+
+Z poziomu OSHWLab możesz:
+- przeglądać i klonować schemat oraz layout PCB,
+- zamówić płytki bezpośrednio przez JLCPCB (przycisk "Order at JLCPCB"),
+- pobrać pliki Gerber i BOM bezpośrednio z projektu.
 
 ## Bloki funkcjonalne
 
@@ -66,9 +79,10 @@ Dzielnik został dobrany tak, aby był bezpieczny i kompatybilny z układami **E
 
 ## Pliki produkcyjne
 
-| Plik | Opis |
+| Plik / Źródło | Opis |
 |---|---|
-| [`Gerber_PCB1_2026-05-28.zip`](Gerber_PCB1_2026-05-28.zip) | Paczka Gerber gotowa do bezpośredniego złożenia zamówienia na PCB |
+| 🌐 **[OSHWLab — Order at JLCPCB](https://oshwlab.com/djradzu/project_bhmgaymt)** | Zamówienie płytek bezpośrednio z projektu (zalecane) |
+| [`Gerber_PCB1_2026-05-28.zip`](Gerber_PCB1_2026-05-28.zip) | Paczka Gerber do ręcznego złożenia zamówienia na PCB |
 
 Domyślne parametry zamówienia dla typowych fabryk PCB: 2 warstwy, FR4 1.6 mm, HASL, standardowa maska lutownicza.
 
@@ -135,6 +149,17 @@ To minimise the overall footprint, components are placed on **both sides of the 
 
 The intended supply range is **LiPo 2S–4S**, while the default firmware configuration assumes a 3S pack.
 
+## OSHWLab Project
+
+The full electrical project (schematic, PCB layout, BOM) is publicly available on **OSHWLab / EasyEDA Pro**:
+
+👉 **[oshwlab.com/djradzu/project_bhmgaymt](https://oshwlab.com/djradzu/project_bhmgaymt)**
+
+From OSHWLab you can:
+- view and fork the schematic and PCB layout,
+- order boards directly via JLCPCB ("Order at JLCPCB" button),
+- download Gerber files and BOM directly from the project.
+
 ## Functional Blocks
 
 | Block | Main Components | Description |
@@ -167,9 +192,10 @@ The divider was selected to ensure safe operation and compatibility with **ESP32
 
 ## Production Files
 
-| File | Description |
+| File / Source | Description |
 |---|---|
-| [`Gerber_PCB1_2026-05-28.zip`](Gerber_PCB1_2026-05-28.zip) | Gerber package ready for direct PCB ordering |
+| 🌐 **[OSHWLab — Order at JLCPCB](https://oshwlab.com/djradzu/project_bhmgaymt)** | Order boards directly from the project (recommended) |
+| [`Gerber_PCB1_2026-05-28.zip`](Gerber_PCB1_2026-05-28.zip) | Gerber package for manual PCB ordering |
 
 Recommended default order parameters for standard PCB manufacturers: 2 layers, 1.6 mm FR4, HASL, standard soldermask.
 
