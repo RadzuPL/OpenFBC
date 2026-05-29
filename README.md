@@ -1,201 +1,160 @@
-# OpenFBC - *Open Flywheel Blaster Controller*
+# OpenFBC — *Open Flywheel Blaster Controller*
 
-## ⚠️ Status projektu
-Projekt jest na wczesnym etapie i ciągle trwają nad nim prace.
+> **Język / Language:** [🇵🇱 Polski](#-opis-projektu) · [🇬🇧 English](#-project-description)
 
-## Licencja
-Projekt jest udostępniany na licencji **GNU Affero General Public License v3.0 (AGPL-3.0)**.
-Pełny tekst licencji znajduje się w pliku `/LICENSE`.
+---
 
-## 1. Wstęp i założenia projektu
-OpenFBC to otwartoźródłowy, miniaturowy i bezdźwiękowy (20kHz+) sterownik PWM do silników szczotkowych Flywheel w wyrzutniach strzałkowych. Sterowanie odbywa się z poziomu przeglądarki przez Web Bluetooth API, więc nie trzeba rozkręcać wyrzutni i kręcić potencjometrem.
+## 🇵🇱 Opis projektu
 
-## 2. Hardware
+OpenFBC to otwartoźródłowy, miniaturowy i bezdźwiękowy (PWM 20 kHz+) sterownik silników Flywheel do wyrzutni strzałkowych. Konfiguracja odbywa się bezprzewodowo przez Bluetooth Low Energy (BLE) z poziomu przeglądarki — bez rozkręcania wyrzutni, bez instalowania aplikacji.
 
-Warstwa sprzętowa systemu składa się z modułu **ESP32-C3 Super Mini** oraz dedykowanej płytki rozszerzającej **PowerBoard v1**, połączonych za pomocą goldpinów 2.54 mm. Płytka PowerBoard v1 integruje sekcję zasilania 5 V, układ sterowania MOSFET-em, tor pomiaru napięcia akumulatora oraz punkty lutownicze do bezpośredniego podłączenia przewodów zasilania, silników i spustu.
+### Jak zacząć?
 
-**Szczegółowa dokumentacja sprzętowa (schemat, diagram połączeń, BOM, pliki Gerber, wizualizacje PCB):**
-👉 [`/hardware/README.md`](hardware/README.md)
+1. **Wgraj firmware** na swój ESP32-C3 Super Mini korzystając z Web Flashera:
+   👉 **[flasher.radzu.net](https://flasher.radzu.net)** — wystarczy Chrome lub Edge i kabel USB.
 
-### Kluczowe komponenty
+2. **Zamontuj płytkę** PowerBoard v1 w wyrzutni i podłącz silniki, zasilanie i spust.
 
-| Element | Opis |
-|---|---|
-| ESP32-C3 Super Mini | Mikrokontroler pełniący rolę jednostki sterującej |
-| PowerBoard v1 | Dedykowana płytka PCB integrująca zasilanie, sterowanie silnikami i pomiar napięcia |
-| IRLR7843 (TO-252) | Tranzystor N-MOSFET przełączający masę silników metodą PWM |
-| TC4420 | Driver bramki MOSFET zapewniający szybkie przełączanie tranzystora |
-| MP2315 | Przetwornica buck 5 V zasilająca logikę z pakietu LiPo |
+3. **Skonfiguruj** parametry pracy (prędkość, spin-up, ochrona baterii) przez Web Konfigurator:
+   👉 **[one.radzu.net](https://one.radzu.net)** — działa z poziomu przeglądarki przez Bluetooth.
 
-- **Silniki:** dwa szczotkowe silniki DC połączone równolegle i sterowane wspólnym kanałem PWM.
-- **Zasilanie:** pakiet LiPo 2S–4S, przy czym domyślne parametry firmware zakładają konfigurację 3S.
-- **Spust:** wejście logiczne aktywowane przez zwarcie do GND, przeznaczone do podłączenia oryginalnego Rev Triggera.
+> **iOS/Safari:** Web Bluetooth nie jest natywnie wspierany. Użyj aplikacji **[Bluefy](https://apps.apple.com/app/bluefy-web-ble-browser/id1492822055)**.
 
-## 3. Logika sterowania silnikami
+### Parametry konfiguracyjne
 
-Silniki flywheel wymagają krótkiego impulsu pełnej mocy przy starcie, aby przełamać bezwładność i szybko dobiec do prędkości roboczej. Dlatego sekwencja działania po naciśnięciu spustu jest następująca:
+Wszystkie parametry ustawia się w Web Konfiguratorze ([one.radzu.net](https://one.radzu.net)):
 
-```
-Trigger wciśnięty:
-  Faza 1 (Spin-Up):   PWM = 100%   przez czas spinUpTime [ms]
-                      (tylko jeśli spust był puszczony przez min. spinUpRearmTime [ms])
-  Szybki re-trigger:  PWM = 100%   przez czas reTriggerSpinUpTime [ms]
-                      (gdy spinUpRearmTime jeszcze nie minął)
-  Faza 2 (Cruise):    PWM = targetSpeed [%]   (aż do zwolnienia spustu)
-
-Trigger zwolniony:
-  Natychmiastowy stop: PWM = 0%
-  Ponowny pełny Spin-Up odblokowuje się dopiero po spinUpRearmTime ms bez wciskania spustu
-```
-
-### Parametry konfiguracyjne (ustawiane przez BLE / Web Config)
-
-| Parametr | Zakres | Domyślnie | Opis |
+| Parametr w konfiguratorze | Zakres | Domyślnie | Opis |
 |---|---|---|---|
-| `spinUpTime` | 0 – 500 ms | 200 ms | Czas trwania fazy Spin-Up na pełnej mocy (100% PWM). Ustawienie 0 pomija fazę Spin-Up i od razu przechodzi do Cruise. |
-| `spinUpRearmTime` | 0 – 5000 ms | 3000 ms | Minimalny czas zwolnienia spustu wymagany do ponownego uruchomienia pełnego Spin-Up. |
-| `reTriggerSpinUpTime` | 0 – 100 ms | 50 ms | Krótki Spin-Up używany przy szybkim ponownym naciśnięciu spustu zanim minie `spinUpRearmTime`. Wartość jest ograniczona do `<= spinUpTime`. |
-| `targetSpeed` | 0 – 100 % | 75 % | Wypełnienie PWM w fazie Cruise — prędkość robocza silników podczas włączonego spustu. |
-| `minVoltage` | 3.0 – 15.0 V | 11.1 V | Minimalne napięcie pakietu LiPo. Poniżej tej granicy wyrzutnia jest blokowana (ochrona akumulatora). |
+| Czas spin-up | 0 – 500 ms | 200 ms | Czas pełnej mocy (100% PWM) przy starcie silników. Wartość 0 = brak spin-up. |
+| Czas blokady re-spin-up | 0 – 5000 ms | 3000 ms | Minimalny czas zwolnienia spustu przed kolejnym pełnym spin-up. |
+| Czas szybkiego re-trigger | 0 – 100 ms | 50 ms | Krótki spin-up przy szybkim ponownym naciśnięciu spustu. |
+| Prędkość robocza | 0 – 100 % | 75 % | Wypełnienie PWM po fazie spin-up (prędkość cruise). |
+| Minimalne napięcie | 3.0 – 15.0 V | 11.1 V | Próg ochrony akumulatora — poniżej tej wartości wyrzutnia jest blokowana. |
 
-Konfigurator Web Config odczytuje też aktualne napięcie baterii (read-only) przez BLE, aby umożliwić kalibrację i weryfikację dzielnika napięcia.
-
-### Przykład dla domyślnych ustawień
-
-```
-Spust wciśnięty → 0–200ms: 100% PWM (spin-up)
-              200ms+:  75% PWM  (cruise, silniki kręcą z roboczą prędkością)
-Spust zwolniony → natychmiastowy stop
-```
-
-## 4. Firmware (Oprogramowanie układowe mikrokontrolera)
-Wymagane środowisko: **Visual Studio Code + PlatformIO**.
-
-Architektura kodu firmware:
- - `firmware/src/main.cpp` – spina moduły, inicjuje piny i przerwania.
- - `firmware/src/ble_server.cpp` + `firmware/src/ble_server.h` – serwer GATT, UUID i obsługa parametrów.
- - `firmware/src/pwm_control.cpp` + `firmware/src/pwm_control.h` – obsługa LEDC, logika Spin-Up/Cruise, odczyt triggera.
- - `firmware/src/params.cpp` + `firmware/src/params.h` – przechowywanie parametrów w NVS (Preferences), dostęp z BLE i PWM.
- - `firmware/include/config.h` – twardo zdefiniowane stałe (piny, częstotliwość PWM, zakresy parametrów).
- - `firmware/platformio.ini` – konfiguracja środowiska i bibliotek.
-
-### Piny ESP32-C3 Super Mini
-
-| Sygnał | Pin | Opis |
-|---|---|---|
-| PWM (oba silniki) | GPIO 2 | Jeden pin → MOSFET → silniki równolegle |
-| Trigger (spust) | GPIO 4 | Wejście logiczne, active LOW, z wewnętrznym pull-up (przycisk do masy) |
-| ADC napięcia | GPIO 1 | Dzielnik napięcia LiPo |
-
-## 5. Web Config (Interfejs sterowania i konteneryzacja)
-Interfejs to statyczna strona HTML/JS korzystająca z `navigator.bluetooth` — bez frameworków i bez `npm install` dla samego frontu.
-
- - Kod strony: `web-config/src/index.html`, `web-config/src/style.css`, `web-config/src/app.js`.
- - Konteneryzacja: `web-config/Dockerfile` oparty o `nginx:alpine`.
- - Automatyzacja: `.github/workflows/docker-publish.yml` buduje i publikuje obraz na GHCR przy zmianach w `web-config/`.
- - Publiczny interfejs dostępny pod adresem: **https://one.radzu.net**
-
-Przykładowy flow wdrożenia:
-1. Push zmian webowych do repo.
-2. GitHub Actions buduje i publikuje nowy obraz (tag `latest` + `main` + SHA commita).
-3. Watchtower (lub inny agent) na serwerze odświeża kontener automatycznie.
-4. Nowa wersja dostępna pod adresem `one.radzu.net`.
-
-Szybki start (Docker):
-```yaml
-services:
-  openfbc-web:
-    image: ghcr.io/radzupl/openfbc-web-config:latest
-    container_name: openfbc-web
-    restart: unless-stopped
-    ports:
-      - "8321:80"
-```
-
-## 6. Web Flasher (Wgrywanie firmware przez przeglądarkę)
-Web Flasher pozwala wgrać firmware na ESP32 bezpośrednio przez przeglądarkę (Chrome/Edge) bez instalacji żadnych narzędzi — wystarczy kabel USB.
-
- - Publiczny flasher dostępny pod adresem: **https://flasher.radzu.net**
- - Technologia: [ESP Web Tools](https://esphome.github.io/esp-web-tools/) — ta sama biblioteka co ESPHome/Tasmota.
- - Kod strony: `web-flasher/src/index.html`, `web-flasher/manifests/manifest-esp32c3.json`, `web-flasher/manifests/manifest-esp32c6.json`.
- - Konteneryzacja: `web-flasher/Dockerfile` oparty o `nginx:alpine`, obraz: `ghcr.io/radzupl/openfbc-flasher:latest`.
- - Automatyzacja buildu firmware: `.github/workflows/firmware-build.yml` — buduje `.bin` dla obu płytek przy push do `firmware/**` lub przy tworzeniu Release.
+Konfigurator wyświetla też aktualne napięcie baterii w czasie rzeczywistym.
 
 ### Obsługiwane płytki
 
-| Płytka | Środowisko PlatformIO | Status |
-|---|---|---|
-| ESP32-C3 Super Mini | `esp32c3-prod` | Docelowy hardware |
-| ESP32-C6 Super Mini | `esp32c6-test` | Platforma testowa (custom board 4MB / FH4) |
+| Płytka | Status |
+|---|---|
+| ESP32-C3 Super Mini | ✅ Docelowy hardware |
+| ESP32-C6 Super Mini | 🧪 Platforma testowa |
 
-### Flow flashowania
-1. Utwórz **Release** w GitHub → `firmware-build.yml` buduje `.bin` i dołącza do Release assets.
-2. Wejdź na **https://flasher.radzu.net** w Chrome lub Edge (wymagane HTTPS + WebSerial API).
-3. Podłącz ESP32 kablem USB, kliknij przycisk odpowiedniej płytki — przeglądarka wgrywa firmware automatycznie.
+### Struktura repozytorium
 
-> **Uwaga:** WebSerial API działa tylko w Chrome i Edge. Firefox i Safari nie są wspierane.
+| Katalog | Zawartość |
+|---|---|
+| [`/hardware`](hardware/README.md) | Schemat, BOM, pliki Gerber, wizualizacje PCB dla PowerBoard v1 |
+| [`/firmware`](firmware/README.md) | Kod źródłowy ESP32 (PlatformIO), instrukcja budowania i wgrywania |
+| [`/web-config`](web-config/README.md) | Konfigurator webowy (BLE), obraz Docker, opis wdrożenia |
+| [`/web-flasher`](web-flasher/README.md) | Web Flasher (ESP Web Tools), obraz Docker, opis wdrożenia |
+| [`/docs`](docs/) | Dodatkowa dokumentacja i materiały |
 
-Szybki start (Docker):
-```yaml
-services:
-  openfbc-flasher:
-    image: ghcr.io/radzupl/openfbc-flasher:latest
-    container_name: openfbc-flasher
-    restart: unless-stopped
-    ports:
-      - "8322:8080"
-```
+### Znane ograniczenia
 
-## 7. Znane problemy
- - iOS/Safari nie wspiera natywnie Web Bluetooth. Użytkownicy Apple powinni używać aplikacji **Bluefy**.
- - WebSerial API (Web Flasher) nie działa w Firefox ani Safari — wymagany Chrome lub Edge.
+- **iOS/Safari** nie wspiera Web Bluetooth — wymagana aplikacja Bluefy.
+- **Web Flasher** działa wyłącznie w Chrome i Edge (WebSerial API).
 
-## 8. TODO (z podziałem na obszary projektu)
+### TODO
 
-### Hardware / elektronika
- - [ ] Zlutować i uruchomić pierwsze prototypy PowerBoard v1.
- - [ ] Zweryfikować termikę i stabilność sekcji mocy pod obciążeniem.
- - [ ] Wykonać ERC/DRC końcowy przed zamówieniem serii.
+#### Hardware / elektronika
+- [x] Zamówić płytki PCB PowerBoard v1.
+- [x] Zamówić wszystkie komponenty elektroniczne.
+- [ ] Zlutować i uruchomić pierwsze prototypy PowerBoard v1.
+- [ ] Zweryfikować termikę i stabilność sekcji mocy pod obciążeniem.
 
-### Firmware (ESP32-C3)
- - [ ] Implementacja odczytu ADC napięcia i blokady przy `minVoltage`.
- - [ ] Dokończyć implementację i konfigurację wszystkich trybów sterowania PWM.
- - [ ] Sprawdzić i dostroić parametry bezpieczeństwa (limity, stany awaryjne).
- - [ ] Przetestować komunikację BLE i kompatybilność z różnymi telefonami.
- - [ ] Testy na docelowym ESP32-C3 Super Mini (aktualnie testy na ESP32-C6 DevKitC-1).
- - [ ] Podnieść `PWM_FREQ_HZ` do 20 kHz po montażu TC4420 (aktualnie 4 kHz — celowo na czas testów z BJT gate-driverem).
+#### Firmware (ESP32-C3)
+- [ ] Implementacja odczytu ADC napięcia i blokady przy minimalnym napięciu.
+- [ ] Dokończyć implementację wszystkich trybów sterowania PWM.
+- [ ] Testy na docelowym ESP32-C3 Super Mini (aktualnie: ESP32-C6 DevKitC-1).
+- [ ] Podnieść częstotliwość PWM do 20 kHz po montażu TC4420.
+- [ ] Przetestować komunikację BLE i kompatybilność z różnymi telefonami.
 
-### Web Config / aplikacja webowa
- - [x] Dodanie pól minVoltage, spinUpRearmTime i reTriggerSpinUpTime do UI.
- - [x] Dodanie odczytu napięcia baterii (read-only) w konfiguratorze.
- - [ ] Dopracować UI i walidację parametrów.
- - [ ] Sprawdzić stabilność połączenia Web Bluetooth i obsługę błędów.
- - [ ] Uzupełnić dokumentację użytkownika dla konfiguratora.
+#### Web Config
+- [x] Pola minVoltage, spinUpRearmTime i reTriggerSpinUpTime w UI.
+- [x] Odczyt napięcia baterii (read-only) w konfiguratorze.
+- [ ] Dopracować UI i walidację parametrów.
+- [ ] Sprawdzić stabilność połączenia Web Bluetooth i obsługę błędów.
 
-### Web Flasher
- - [x] Skonfigurować kontener Docker (`nginx:alpine`) i opublikować obraz na GHCR.
- - [x] Wdrożyć flasher pod adresem `https://flasher.radzu.net` (Cloudflare Tunnel + SSL Flexible rule).
- - [x] Zaimplementować automatyczny build firmware w GitHub Actions (matrix build: C3 + C6).
- - [x] Manifesty ESP Web Tools dla obu płytek wskazujące na GitHub Release assets.
- - [x] Wykonać pierwszy Release z tagiem i zweryfikować że `.bin` pojawia się w assets.
- - [ ] Przetestować end-to-end: Release → flasher → fizyczne ESP32.
- - [ ] Dodać wyświetlanie aktualnej wersji firmware na stronie flashera (GitHub Releases API).
+#### Web Flasher
+- [x] Kontener Docker opublikowany na GHCR.
+- [x] Flasher dostępny pod `flasher.radzu.net`.
+- [x] Automatyczny build firmware w GitHub Actions (ESP32-C3 + C6).
+- [x] Pierwszy Release z tagiem — `.bin` w assets.
+- [ ] Test end-to-end: Release → flasher → fizyczne ESP32.
+- [ ] Wyświetlanie aktualnej wersji firmware na stronie flashera.
 
-### Konteneryzacja i deployment
- - [x] Skonfigurować kontener Docker dla web-config (`nginx:alpine`).
- - [x] Zweryfikować automatyczny build/publish obrazu w GitHub Actions (tag `latest` na branchu `main`).
- - [x] Obraz publiczny dostępny na GHCR: `ghcr.io/radzupl/openfbc-web-config:latest`.
- - [x] Strona placeholder działa i jest dostępna publicznie pod `one.radzu.net`.
- - [x] Dopiąć subdomenę do kontenera i potwierdzić dostępność po HTTPS (SSL przez Cloudflare).
- - [x] Skonfigurować kontener i subdomenę `flasher.radzu.net` dla Web Flashera.
+#### Testy
+- [ ] Weryfikacja działania Spin-Up/Cruise na fizycznym silniku.
+- [ ] Test end-to-end Web Flasher: wgranie firmware przez przeglądarkę.
 
-### Testy
- - [ ] Weryfikacja działania Spin-Up/Cruise na fizycznym silniku.
- - [ ] Test end-to-end Web Flasher: wgranie firmware przez przeglądarkę na ESP32-C3.
+#### Dokumentacja
+- [ ] Uzupełnić README po każdym większym etapie.
 
-### Organizacja projektu i dokumentacja
- - [ ] Uporządkować backlog i kolejność prac (MVP → kolejne iteracje).
- - [ ] Uzupełnić README o status postępu po każdym większym etapie.
+#### Infrastruktura
+- [ ] Migracja PlatformIO z `pioarduino` na oficjalny `espressif32` (gdy Arduino Core 3.x trafi do stable registry).
 
-### Zależności i infrastruktura
- - [ ] Migracja platformy PlatformIO z `pioarduino` (fork) na oficjalny `espressif32` gdy Arduino Core 3.x trafi do stabilnego PlatformIO registry — dotyczy obu środowisk (`esp32c3-prod` i `esp32c6-test`).
+### Licencja
+
+Projekt jest udostępniany na licencji **GNU Affero General Public License v3.0 (AGPL-3.0)**.
+Pełny tekst: [`/LICENSE`](LICENSE).
+
+---
+
+## 🇬🇧 Project Description
+
+OpenFBC is an open-source, compact and silent (PWM 20 kHz+) flywheel motor controller for dart blasters. Configuration is done wirelessly via Bluetooth Low Energy (BLE) directly from a browser — no disassembly, no app installation required.
+
+### Getting Started
+
+1. **Flash the firmware** to your ESP32-C3 Super Mini using the Web Flasher:
+   👉 **[flasher.radzu.net](https://flasher.radzu.net)** — requires Chrome or Edge and a USB cable.
+
+2. **Install the board** (PowerBoard v1) in your blaster and connect motors, power and trigger.
+
+3. **Configure** operating parameters (speed, spin-up timing, battery protection) via the Web Configurator:
+   👉 **[one.radzu.net](https://one.radzu.net)** — works in-browser over Bluetooth.
+
+> **iOS/Safari:** Web Bluetooth is not natively supported. Use the **[Bluefy](https://apps.apple.com/app/bluefy-web-ble-browser/id1492822055)** app.
+
+### Configuration Parameters
+
+All parameters are set in the Web Configurator ([one.radzu.net](https://one.radzu.net)):
+
+| Parameter | Range | Default | Description |
+|---|---|---|---|
+| Spin-up time | 0 – 500 ms | 200 ms | Full power (100% PWM) duration when motors start. 0 = no spin-up phase. |
+| Re-spin-up lock time | 0 – 5000 ms | 3000 ms | Minimum trigger release time before a full spin-up is allowed again. |
+| Quick re-trigger time | 0 – 100 ms | 50 ms | Short spin-up used when trigger is pressed again before lock expires. |
+| Cruise speed | 0 – 100 % | 75 % | PWM duty cycle after spin-up (running speed). |
+| Minimum voltage | 3.0 – 15.0 V | 11.1 V | Battery protection threshold — blaster is disabled below this voltage. |
+
+The configurator also shows current battery voltage in real time.
+
+### Supported Boards
+
+| Board | Status |
+|---|---|
+| ESP32-C3 Super Mini | ✅ Target hardware |
+| ESP32-C6 Super Mini | 🧪 Test platform |
+
+### Repository Structure
+
+| Directory | Contents |
+|---|---|
+| [`/hardware`](hardware/README.md) | Schematic, BOM, Gerber files, PCB renders for PowerBoard v1 |
+| [`/firmware`](firmware/README.md) | ESP32 source code (PlatformIO), build and flash instructions |
+| [`/web-config`](web-config/README.md) | BLE Web Configurator, Docker image, deployment notes |
+| [`/web-flasher`](web-flasher/README.md) | Web Flasher (ESP Web Tools), Docker image, deployment notes |
+| [`/docs`](docs/) | Additional documentation and materials |
+
+### Known Limitations
+
+- **iOS/Safari** does not support Web Bluetooth — Bluefy app required.
+- **Web Flasher** works only in Chrome and Edge (WebSerial API).
+
+### License
+
+This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**.
+Full text: [`/LICENSE`](LICENSE).
