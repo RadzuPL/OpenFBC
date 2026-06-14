@@ -155,6 +155,12 @@ const logEl        = document.getElementById('log');
 let bleDevice = null;
 let chars = {};
 
+const allSliders = [inputSpin, inputRearm, inputRetriggerSpin, inputSpeed, inputVoltage];
+
+function setSliders(enabled) {
+  allSliders.forEach(s => { s.disabled = !enabled; });
+}
+
 // --- Helpers ---
 function setStatus(key, cls) {
   statusBadge.textContent = t(key);
@@ -245,6 +251,7 @@ btnConnect.addEventListener('click', async () => {
     btnConnect.textContent = t('btn_connect_active');
     btnSend.disabled = false;
     btnReadBattery.disabled = false;
+    setSliders(true);
     addLog(t('log_connected') + bleDevice.name);
   } catch(e) {
     setStatus('status_conn_err', 'error');
@@ -257,6 +264,7 @@ function onDisconnected() {
   btnConnect.textContent = t('btn_connect');
   btnSend.disabled = true;
   btnReadBattery.disabled = true;
+  setSliders(false);
   chars = {};
   addLog(t('log_disconnected'));
 }

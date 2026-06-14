@@ -68,6 +68,7 @@
       text-align: right;
     }
     input[type=range] { width: 100%; accent-color: #3b82f6; }
+    input[type=range]:disabled { opacity: 0.35; cursor: not-allowed; }
     .btn-row {
       display: flex;
       gap: 0.75rem;
@@ -122,7 +123,7 @@
         <span data-i18n="label_spin">Spin-up time</span>
         <span id="spin-value" data-i18n-title="tip_spin">200 ms</span>
       </label>
-      <input id="input-spin-up-time" type="range" min="0" max="500" step="10" value="200" data-i18n-title="tip_spin" />
+      <input id="input-spin-up-time" type="range" min="0" max="500" step="10" value="200" data-i18n-title="tip_spin" disabled />
     </div>
 
     <div class="param">
@@ -130,7 +131,7 @@
         <span data-i18n="label_rearm">Spin-up rearm time</span>
         <span id="rearm-value" data-i18n-title="tip_rearm">3000 ms</span>
       </label>
-      <input id="input-spin-up-rearm-time" type="range" min="0" max="5000" step="50" value="3000" data-i18n-title="tip_rearm" />
+      <input id="input-spin-up-rearm-time" type="range" min="0" max="5000" step="50" value="3000" data-i18n-title="tip_rearm" disabled />
     </div>
 
     <div class="param">
@@ -138,7 +139,7 @@
         <span data-i18n="label_retrigger_spin">Quick re-trigger spin-up</span>
         <span id="retrigger-spin-value" data-i18n-title="tip_retrigger_spin">50 ms</span>
       </label>
-      <input id="input-retrigger-spin-up-time" type="range" min="0" max="100" step="1" value="50" data-i18n-title="tip_retrigger_spin" />
+      <input id="input-retrigger-spin-up-time" type="range" min="0" max="100" step="1" value="50" data-i18n-title="tip_retrigger_spin" disabled />
     </div>
 
     <div class="param">
@@ -146,7 +147,7 @@
         <span data-i18n="label_speed">Target speed</span>
         <span id="speed-value" data-i18n-title="tip_speed">75%</span>
       </label>
-      <input id="input-target-speed" type="range" min="0" max="100" step="1" value="75" data-i18n-title="tip_speed" />
+      <input id="input-target-speed" type="range" min="0" max="100" step="1" value="75" data-i18n-title="tip_speed" disabled />
     </div>
 
     <div class="param">
@@ -154,7 +155,7 @@
         <span data-i18n="label_volt">Min. voltage</span>
         <span id="voltage-value" data-i18n-title="tip_volt">11.1 V</span>
       </label>
-      <input id="input-min-voltage" type="range" min="3.0" max="15.0" step="0.1" value="11.1" data-i18n-title="tip_volt" />
+      <input id="input-min-voltage" type="range" min="3.0" max="15.0" step="0.1" value="11.1" data-i18n-title="tip_volt" disabled />
     </div>
 
     <div class="param">
