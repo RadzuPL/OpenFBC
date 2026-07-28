@@ -28,7 +28,8 @@ Kod źródłowy firmware dla ESP32-C3/C6 oparty na Arduino Core + PlatformIO. Fi
 |---|---|
 | `src/main.cpp` | Punkt wejścia — inicjalizacja pinów, przerwań i modułów |
 | `src/ble_server.cpp/.h` | Serwer GATT BLE — UUID, charakterystyki, obsługa połączeń |
-| `src/pwm_control.cpp/.h` | Logika LEDC PWM — spin-up, cruise, odczyt triggera |
+| `src/battery_monitor.cpp/.h` | Odczyt napięcia baterii i buforowany pomiar spoczynkowy do blokady low-voltage |
+| `src/pwm_control.cpp/.h` | Logika LEDC PWM — spin-up, cruise, odczyt triggera i przypomnienia silnikami |
 | `src/params.cpp/.h` | Parametry w NVS (Preferences) — odczyt/zapis przez BLE i PWM |
 | `include/config.h` | Stałe konfiguracyjne — piny, częstotliwość PWM, zakresy |
 | `platformio.ini` | Konfiguracja środowisk i zależności |
@@ -58,6 +59,8 @@ Spust zwolniony:
 ```
 
 > Nazwy parametrów odpowiadają etykietom w Web Konfiguratorze ([one.radzu.net](https://one.radzu.net)).
+
+Blokada minimalnego napięcia korzysta z ostatniego pomiaru wykonanego po co najmniej 5 s bezczynności silników, żeby nie reagować na chwilowe spadki pod obciążeniem. Po 1 godzinie od uruchomienia lub ostatniego wciśnięcia spustu firmware odtwarza krótki sygnał silnikami i ponawia go co 5 minut, dopóki blaster pozostaje nieużywany.
 
 ### Automatyczny build (GitHub Actions)
 
@@ -89,7 +92,8 @@ Firmware source code for ESP32-C3/C6 based on Arduino Core + PlatformIO. Handles
 |---|---|
 | `src/main.cpp` | Entry point — pin init, interrupts, module setup |
 | `src/ble_server.cpp/.h` | BLE GATT server — UUIDs, characteristics, connections |
-| `src/pwm_control.cpp/.h` | LEDC PWM logic — spin-up, cruise, trigger reading |
+| `src/battery_monitor.cpp/.h` | Battery voltage reads and cached idle-only sampling for low-voltage cutoff |
+| `src/pwm_control.cpp/.h` | LEDC PWM logic — spin-up, cruise, trigger reading and motor reminders |
 | `src/params.cpp/.h` | Parameters in NVS (Preferences) — read/write via BLE and PWM |
 | `include/config.h` | Compile-time constants — pins, PWM frequency, parameter ranges |
 | `platformio.ini` | Environment and dependency configuration |
@@ -119,6 +123,8 @@ Trigger released:
 ```
 
 > Parameter names match the labels shown in the Web Configurator ([one.radzu.net](https://one.radzu.net)).
+
+The minimum-voltage cutoff uses the latest sample collected only after at least 5 seconds of motor inactivity, which avoids false triggers from temporary voltage sag under load. After 1 hour since power-on or the last trigger press, firmware plays a short reminder on the motors and repeats it every 5 minutes while the blaster stays unused.
 
 ### Automated Build (GitHub Actions)
 
