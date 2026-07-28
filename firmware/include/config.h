@@ -72,3 +72,17 @@
 // At 12.6V (3S full): ADC pin = 1.83V
 // Requires 100nF cap across R2 as charge-bucket for ADC sample-hold.
 #define BATTERY_DIVIDER_RATIO 6.882f
+
+// Battery protection uses only idle samples to avoid false low readings under load.
+#define BATTERY_IDLE_SAMPLE_DELAY_MS      5000u
+#define BATTERY_IDLE_SAMPLE_INTERVAL_MS   1000u
+
+// Reminder for unused blaster: first signal after 1 hour, then every 5 minutes.
+#define INACTIVITY_REMINDER_DELAY_MS      3600000UL
+#define INACTIVITY_REMINDER_INTERVAL_MS   300000UL
+
+// Short motor pulse pattern used as audible reminder / low-battery warning.
+#define MOTOR_ALERT_DUTY_PERCENT          30u
+#define MOTOR_ALERT_PULSE_COUNT           2u
+#define MOTOR_ALERT_PULSE_ON_TIME_MS      80u
+#define MOTOR_ALERT_PULSE_OFF_TIME_MS     80u

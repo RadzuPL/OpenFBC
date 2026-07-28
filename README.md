@@ -30,9 +30,11 @@ Wszystkie parametry ustawia się w Web Konfiguratorze ([one.radzu.net](https://o
 | Czas blokady re-spin-up | 0 – 5000 ms | 3000 ms | Minimalny czas zwolnienia spustu przed kolejnym pełnym spin-up. |
 | Czas szybkiego re-trigger | 0 – 100 ms | 50 ms | Krótki spin-up przy szybkim ponownym naciśnięciu spustu. |
 | Prędkość robocza | 0 – 100 % | 75 % | Wypełnienie PWM po fazie spin-up (prędkość cruise). |
-| Minimalne napięcie | 3.0 – 15.0 V | 11.1 V | Próg ochrony akumulatora — poniżej tej wartości wyrzutnia jest blokowana. |
+| Minimalne napięcie | 3.0 – 15.0 V | 11.1 V | Próg ochrony akumulatora — blokada strzału działa na podstawie pomiaru wykonanego po 5 s postoju silników. |
 
 Konfigurator wyświetla też aktualne napięcie baterii w czasie rzeczywistym.
+
+Po 1 godzinie od uruchomienia lub ostatniego wciśnięcia spustu firmware przypomina o wyłączeniu nieużywanego blastera krótkim sygnałem silnikami, a następnie powtarza przypomnienie co 5 minut.
 
 ### Obsługiwane płytki
 
@@ -65,7 +67,7 @@ Konfigurator wyświetla też aktualne napięcie baterii w czasie rzeczywistym.
 - [ ] Zweryfikować termikę i stabilność sekcji mocy pod obciążeniem.
 
 #### Firmware (ESP32-C3)
-- [ ] Implementacja odczytu ADC napięcia i blokady przy minimalnym napięciu.
+- [x] Implementacja odczytu ADC napięcia i blokady przy minimalnym napięciu.
 - [ ] Dokończyć implementację wszystkich trybów sterowania PWM.
 - [ ] Testy na docelowym ESP32-C3 Super Mini (aktualnie: ESP32-C6 DevKitC-1).
 - [ ] Podnieść częstotliwość PWM do 20 kHz po montażu TC4420.

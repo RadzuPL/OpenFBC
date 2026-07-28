@@ -3,6 +3,7 @@
 // Entry point: Serial debug, BLE server, PWM motor control, trigger loop.
 // =============================================================================
 #include <Arduino.h>
+#include "battery_monitor.h"
 #include "config.h"
 #include "params.h"
 #include "ble_server.h"
@@ -22,6 +23,7 @@ void setup() {
                 PIN_PWM_MOTORS, PIN_TRIGGER, PIN_VOLTAGE_ADC);
 #endif
 
+  setupBatteryMonitor();
   initBleServer();  // loads params from NVS, starts BLE
   setupPwm();       // configures LEDC and trigger pin
 

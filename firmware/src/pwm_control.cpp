@@ -14,12 +14,14 @@
 // Both motors wired in parallel -> single LEDC channel, single pin.
 // =============================================================================
 #include <Arduino.h>
+#include "battery_monitor.h"
 #include "pwm_control.h"
 #include "params.h"
 #include "config.h"
 
 // Motor control phases
 enum MotorPhase { PHASE_IDLE, PHASE_SPINUP, PHASE_CRUISE };
+enum MotorAlert { ALERT_NONE, ALERT_INACTIVITY, ALERT_LOW_BATTERY };
 
 // --- Internal state ---
 static MotorPhase phase       = PHASE_IDLE;
@@ -28,12 +30,81 @@ static uint16_t   activeSpinUpDurationMs = 0;
 static uint32_t   releaseStartMs = 0;
 static bool       previousTriggerHeld = false;
 static bool       spinUpArmed = true;
+static uint32_t   lastTriggerPressMs = 0;
+static uint32_t   lastReminderMs = 0;
+static MotorAlert alertMode = ALERT_NONE;
+static bool       alertOutputHigh = false;
+static uint8_t    alertPulseIndex = 0;
+static uint32_t   alertSegmentStartMs = 0;
 
 // Converts percent (0-100) to LEDC duty value (0-255 for 8-bit)
 static inline uint32_t dutyToLedc(float pct) {
   if (pct <= 0.0f)   return 0;
   if (pct >= 100.0f) return 255;
   return (uint32_t)((pct / 100.0f) * 255.0f);
+}
+
+static void stopAlert() {
+  alertMode = ALERT_NONE;
+  alertOutputHigh = false;
+  alertPulseIndex = 0;
+}
+
+static void startAlert(MotorAlert mode, uint32_t now) {
+  alertMode = mode;
+  alertOutputHigh = true;
+  alertPulseIndex = 0;
+  alertSegmentStartMs = now;
+  ledcWrite(PIN_PWM_MOTORS, dutyToLedc((float)MOTOR_ALERT_DUTY_PERCENT));
+
+#if DEBUG_MODE
+  Serial.printf("[PWM] Alert start: %s\n",
+                mode == ALERT_LOW_BATTERY ? "low-battery" : "inactivity");
+#endif
+}
+
+static bool updateAlert(uint32_t now) {
+  if (alertMode == ALERT_NONE) {
+    return false;
+  }
+
+  if (alertOutputHigh) {
+    if ((now - alertSegmentStartMs) >= MOTOR_ALERT_PULSE_ON_TIME_MS) {
+      alertOutputHigh = false;
+      alertSegmentStartMs = now;
+      ledcWrite(PIN_PWM_MOTORS, 0);
+    }
+    return true;
+  }
+
+  if ((now - alertSegmentStartMs) < MOTOR_ALERT_PULSE_OFF_TIME_MS) {
+    return true;
+  }
+
+  alertPulseIndex++;
+  if (alertPulseIndex >= MOTOR_ALERT_PULSE_COUNT) {
+    stopAlert();
+    ledcWrite(PIN_PWM_MOTORS, 0);
+#if DEBUG_MODE
+    Serial.println("[PWM] Alert complete");
+#endif
+    return false;
+  }
+
+  alertOutputHigh = true;
+  alertSegmentStartMs = now;
+  ledcWrite(PIN_PWM_MOTORS, dutyToLedc((float)MOTOR_ALERT_DUTY_PERCENT));
+  return true;
+}
+
+static void recordTriggerPress(uint32_t now) {
+  lastTriggerPressMs = now;
+  lastReminderMs = now;
+}
+
+static void finalizeUpdate(uint32_t now, bool triggerHeld) {
+  updateBatteryMonitor((phase != PHASE_IDLE) || (alertMode != ALERT_NONE), now);
+  previousTriggerHeld = triggerHeld;
 }
 
 void setupPwm() {
@@ -43,6 +114,8 @@ void setupPwm() {
   ledcWrite(PIN_PWM_MOTORS, 0);  // motors stopped at startup
 
   pinMode(PIN_TRIGGER, INPUT_PULLUP);  // active LOW, button to GND
+  lastTriggerPressMs = millis();
+  lastReminderMs = lastTriggerPressMs;
 
 #if DEBUG_MODE
   Serial.printf("[PWM] Setup: pin=%d freq=%uHz %dbit | trigger=pin%d\n",
@@ -53,6 +126,42 @@ void setupPwm() {
 void updateMotors() {
   uint32_t now = millis();
   bool triggerHeld = (digitalRead(PIN_TRIGGER) == LOW);
+
+  if (triggerHeld && !previousTriggerHeld) {
+    recordTriggerPress(now);
+  }
+
+  if (triggerHeld && isBatteryLow()) {
+    phase = PHASE_IDLE;
+    spinUpArmed = false;
+    releaseStartMs = now;
+
+    if (alertMode == ALERT_INACTIVITY) {
+      stopAlert();
+    }
+    if (!previousTriggerHeld && alertMode == ALERT_NONE) {
+      startAlert(ALERT_LOW_BATTERY, now);
+    }
+
+    if (!updateAlert(now)) {
+      ledcWrite(PIN_PWM_MOTORS, 0);
+    }
+
+#if DEBUG_MODE
+    if (!previousTriggerHeld) {
+      Serial.printf("[PWM] Trigger blocked by low battery: %.2f V < %.2f V\n",
+                    getLastIdleBatteryVoltage(), minVoltage);
+    }
+#endif
+
+    finalizeUpdate(now, triggerHeld);
+    return;
+  }
+
+  if (triggerHeld && alertMode != ALERT_NONE) {
+    stopAlert();
+    ledcWrite(PIN_PWM_MOTORS, 0);
+  }
 
   if (!triggerHeld) {
     // --- Trigger released: immediate stop ---
@@ -76,7 +185,15 @@ void updateMotors() {
 #endif
     }
 
-    previousTriggerHeld = false;
+    if ((now - lastTriggerPressMs) >= INACTIVITY_REMINDER_DELAY_MS &&
+        (now - lastReminderMs) >= INACTIVITY_REMINDER_INTERVAL_MS) {
+      startAlert(ALERT_INACTIVITY, now);
+      lastReminderMs = now;
+    }
+
+    updateAlert(now);
+
+    finalizeUpdate(now, triggerHeld);
     return;
   }
 
@@ -128,5 +245,5 @@ void updateMotors() {
 
   // PHASE_CRUISE: PWM already set, nothing to do
   // (targetSpeed changes via BLE will take effect on next trigger press)
-  previousTriggerHeld = true;
+  finalizeUpdate(now, triggerHeld);
 }
