@@ -7,21 +7,13 @@
 // =============================================================================
 #include <Arduino.h>
 #include "ble_server.h"
+#include "battery_monitor.h"
 #include "params.h"
 #include "config.h"
 #include <NimBLEDevice.h>
 
 // --- Connection state ---
 static bool bleConnected = false;
-
-static float readBatteryVoltage() {
-  uint32_t pinMilliVolts = analogReadMilliVolts(PIN_VOLTAGE_ADC);
-  if (pinMilliVolts == 0) {
-    uint16_t raw = analogRead(PIN_VOLTAGE_ADC);
-    pinMilliVolts = (uint32_t)(((float)raw / 4095.0f) * 3300.0f);
-  }
-  return ((float)pinMilliVolts / 1000.0f) * BATTERY_DIVIDER_RATIO;
-}
 
 // --- BLE server callbacks ---
 class ServerCallbacks : public NimBLEServerCallbacks {
@@ -126,7 +118,7 @@ class MinVoltageCallback : public NimBLECharacteristicCallbacks {
 
 class BatteryVoltageCallback : public NimBLECharacteristicCallbacks {
   void onRead(NimBLECharacteristic* pChar, NimBLEConnInfo& connInfo) override {
-    float batteryVoltage = readBatteryVoltage();
+    float batteryVoltage = readBatteryVoltageNow();
     pChar->setValue(batteryVoltage);
 #if DEBUG_MODE
     Serial.printf("[BLE] batteryVoltage read: %.2f V\n", batteryVoltage);
@@ -137,12 +129,6 @@ class BatteryVoltageCallback : public NimBLECharacteristicCallbacks {
 void initBleServer() {
   // Load last saved parameters from NVS flash
   loadParams();
-
-  pinMode(PIN_VOLTAGE_ADC, INPUT);
-  analogReadResolution(12);
-#if defined(ARDUINO_ARCH_ESP32)
-  analogSetPinAttenuation(PIN_VOLTAGE_ADC, ADC_11db);
-#endif
 
   // Init BLE stack
   NimBLEDevice::init(BLE_DEVICE_NAME);
@@ -190,7 +176,7 @@ void initBleServer() {
     BLE_CHAR_BATTERY_VOLTAGE,
     NIMBLE_PROPERTY::READ);
   pBatteryVoltage->setCallbacks(new BatteryVoltageCallback());
-  pBatteryVoltage->setValue(readBatteryVoltage());
+  pBatteryVoltage->setValue(readBatteryVoltageNow());
 
   // Service MUST be started before pServer->start() in NimBLE 2.x
   
